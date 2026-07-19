@@ -2,17 +2,17 @@
 
 mkdir ./.obj
 
-echo "Compiling..."
+echo "Compiling as a static library..."
 
 cd src
 for CFILE in $(find . -maxdepth 1 -name "*.cpp"); do
 	echo "	File: $CFILE"
-	g++ -O2 -std=c++17 -c "$CFILE" -o "../.obj/$CFILE.o"
+	g++ -O2 -std=c++17 -c "$CFILE" -o "../.obj/$CFILE.o" -I"./include" -I"./hotchlib/include" -I"./src"
 
 	if [ $? -ne 0 ]; then
-        	echo "Compilation failed"
-        	exit 1
-    	fi
+        echo "Compilation failed"
+        exit 1
+    fi
 done
 
 echo "Linking..."
@@ -21,6 +21,5 @@ ar rcs libcml.a $(find ./.obj -maxdepth 1 -name "*.o")
 
 if [ $? -ne 0 ]; then
 	echo "Linking failed"
-    	exit 1
+    exit 1
 fi
-

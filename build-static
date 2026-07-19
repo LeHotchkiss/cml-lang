@@ -1,0 +1,26 @@
+#!/bin/sh
+
+mkdir ./.obj
+
+echo "Compiling..."
+
+cd src
+for CFILE in $(find . -maxdepth 1 -name "*.cpp"); do
+	echo "	File: $CFILE"
+	g++ -O2 -std=c++17 -c "$CFILE" -o "../.obj/$CFILE.o"
+
+	if [ $? -ne 0 ]; then
+        	echo "Compilation failed"
+        	exit 1
+    	fi
+done
+
+echo "Linking..."
+
+ar rcs libcml.a $(find ./.obj -maxdepth 1 -name "*.o")
+
+if [ $? -ne 0 ]; then
+	echo "Linking failed"
+    	exit 1
+fi
+

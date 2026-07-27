@@ -16,6 +16,7 @@ for CFILE in $(find . -maxdepth 1 -name "*.cpp"); do
 done
 
 echo "Linking..."
+cd ..
 
 ar rcs libcml.a $(find ./.obj -maxdepth 1 -name "*.o")
 

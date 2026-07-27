@@ -4,7 +4,7 @@
                            / /___/ /  / / /___
                            \____/_/  /_/_____/
                    
-                         CB++ Markdown Language
+                          Cool Markdown Language
 
 A human-readable markup language with an extremely simple syntax.
 Current standart version: 100

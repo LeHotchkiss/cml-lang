@@ -1,0 +1,6 @@
+This a very long piece of text, so including it directly in the source CML
+file would be extremely inconvenient. If only there was a method to
+address this.... 
+
+
+oh wait.

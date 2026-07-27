@@ -1,12 +1,12 @@
-#ifndef CBPP_DATAFILE_OBJECTS_H
-#define CBPP_DATAFILE_OBJECTS_H
+#ifndef CML_DATAFILE_OBJECTS_H
+#define CML_DATAFILE_OBJECTS_H
 
-#include "cbpp/CML.h"
-#include "cbpp/String.h"
-#include "cbpp/Array.h"
-#include "cbpp/Table.h"
+#include "include/CML.h"
+#include "hlib/String.h"
+#include "hlib/Array.h"
+#include "hlib/Table.h"
 
-namespace cbpp::cdf {
+namespace cml {
     class IObject {
         public:
             virtual IObject* At(const char*) = 0;
@@ -41,7 +41,7 @@ namespace cbpp::cdf {
     class CBinaryObject final : public IObject {
         constexpr static const char* s_sName = "<binary>";
 
-        cbpp::CArray<uint8_t> m_aData;
+        hlib::CArray<uint8_t> m_aData;
 
         public:
             int_t AsInt() const;
@@ -144,7 +144,7 @@ namespace cbpp::cdf {
     };
 
     class CStringObject final : public IObject {
-        cbpp::CString m_sData;
+        hlib::CString m_sData;
 
         public:
             int_t AsInt() const;
@@ -179,7 +179,7 @@ namespace cbpp::cdf {
     class CArrayObject final : public IObject {
         constexpr static const char* s_sName = "<array>";
 
-        cbpp::CArray<IObject*> m_pData;
+        hlib::CArray<IObject*> m_pData;
 
         public:
             int_t AsInt() const;
@@ -214,7 +214,7 @@ namespace cbpp::cdf {
     class CDictObject final : public IObject {
         constexpr static const char* s_sName = "<table>";
 
-        cbpp::CBinTable<cbpp::CString, IObject*> m_dTable;
+        hlib::CBinTable<hlib::CString, IObject*> m_dTable;
 
         public:
             int_t AsInt() const;

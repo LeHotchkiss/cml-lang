@@ -8,9 +8,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "cbpp/Constants.h"
-
-namespace cbpp::cdf {
+namespace cml {
     // Integer type to use
     typedef int32_t int_t;
 
@@ -113,7 +111,7 @@ namespace cbpp::cdf {
 
     class CPathAccess {
         EPathError m_iStatus = EPathError::Ok;
-        CObject m_pPathObj = cdf::NIL;
+        CObject m_pPathObj = cml::NIL;
 
         public:
             CPathAccess( CObject, EPathError );

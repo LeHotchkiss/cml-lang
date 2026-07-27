@@ -1,0 +1,5 @@
+version 100
+
+some_value_from_included_file {
+	name "i am le include"
+}

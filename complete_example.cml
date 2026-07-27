@@ -1,0 +1,57 @@
+version 100					# declare a version (optional)
+
+include "example/include.cml"			# the including is relative to the current PWD
+
+funny_string "Пример использования UTF-8!"
+
+base_obj {
+	name "base object example"
+	pos_x 0f
+	pos_y 0f				# force these numbers to become floats
+	mass 100f
+
+	is_alive true
+
+	epic_sci_value 5.1e8
+
+	tags [
+		"object"
+	]
+}
+
+objects {
+	car_object {
+		concat "base_obj"		# copy entries from base
+
+		pos_x 52f			# override the pos_x value to 52
+		tags [ "car" ]			# this array will become ["object" "car"], since arrays are concatenated
+		
+		is_alive false			# the car is now dead!
+	}
+}
+
+other_object {
+	concat "objects.car_object"		# addressing is possible
+}
+
+example_array [
+	1 2 3 4 5
+	"A" "B" "C" "D"
+
+	[
+		"A sub-array"
+	]
+
+	{
+		name "A nameless object inside an array"
+		value 3.14
+	}
+
+	"I feel like doing some\n newlines here"
+	"Some tabs \t\t\t won`t hurt"
+	"And you can do this: \"quote inside quote\". Isn`t is amazing?"
+	"My\\Obnoxious\\Windows\\Path\\With\\Backslashes"
+]
+
+text_reference 		@"example/text.txt"
+binary_reference	&"example/example.jpg"

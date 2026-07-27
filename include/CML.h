@@ -1,26 +1,34 @@
-#ifndef CBPP_CML_API_H
-#define CBPP_CML_API_H
+#ifndef CML_API_H
+#define CML_API_H
 
 #include <stdint.h>
 #include <stddef.h>
 
-#include "cbpp/Array.h"
-#include "cbpp/Stack.h"
-#include "cbpp/String.h"
+#include "hlib/Array.h"
+#include "hlib/Stack.h"
+#include "hlib/String.h"
 
-#include "engine/datafile/object_model.h"
+#include "src/object_model.h"
 
-#define CBPP_CML_VERSION 100                        // Actual language version
-#define CBPP_CML_VERSION_LEAST 100                  // Any versions below this are considered deprecated
-#define CBPP_CML_MAX_REFFILE (64 * (1 << 20))       // File reference size limit, 64 MB by default
+#define CML_VERSION 100                        // Actual language version
+#define CML_VERSION_LEAST 100                  // Any versions below this are considered deprecated
+#define CML_MAX_REFFILE (64 * (1 << 20))       // File reference size limit, 64 MB by default
 
-#define CBPP_CML_STACK_LIMIT 128                    // Nesting depth limit
+#define CML_STACK_LIMIT 128                    // Nesting depth limit
 
-namespace cbpp {
-    class IFile;
-}
+namespace cml {
+    typedef void* (*cb_openfile_t)(const char*);
+    typedef int (*cb_getchar_t)(void*);
+    typedef void (*cb_closefile_t)(void*);
+    typedef size_t (*cb_filelen_t)(void*);
+    typedef void (*cb_readfile_t)(void*, char*);
 
-namespace cbpp::cdf {
+    extern cb_openfile_t g_fpOpenFile;
+    extern cb_getchar_t g_fpGetChar;
+    extern cb_closefile_t g_fpCloseFile;
+    extern cb_filelen_t g_fpFileLen;
+    extern cb_readfile_t g_fpReadFile;
+
     enum class ETextError : uint32_t {
         Ok,                     // We`re cool
 
@@ -59,8 +67,8 @@ namespace cbpp::cdf {
     */
     class CTextParser {
         struct IncludeNode {
-            cbpp::CString sPath;
-            cbpp::IFile* pFile = NULL;
+            hlib::CString sPath;
+            void* pFile = NULL;
 
             size_t iLine = 1;
 
@@ -101,14 +109,14 @@ namespace cbpp::cdf {
             ParentPath
         };
         
-        cbpp::CArray<char> m_sLexemBuffer;
-        cbpp::CString m_sCurrentName;
+        hlib::CArray<char> m_sLexemBuffer;
+        hlib::CString m_sCurrentName;
 
-        cbpp::CStack<IncludeNode> m_aFilesStack;
-        cbpp::CStack<CObject> m_aStack;
-        cbpp::CStack<ScobeNode> m_aScobesStack;
+        hlib::CStack<IncludeNode> m_aFilesStack;
+        hlib::CStack<CObject> m_aStack;
+        hlib::CStack<ScobeNode> m_aScobesStack;
 
-        CObject m_pRootObject = cdf::NIL;
+        CObject m_pRootObject = cml::NIL;
 
         size_t m_iLine = 0, m_iCol = 0;
 

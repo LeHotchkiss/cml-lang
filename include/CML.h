@@ -4,10 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "hlib/Array.h"
-#include "hlib/Stack.h"
-#include "hlib/String.h"
-
+#include "src/settings.h"
 #include "src/object_model.h"
 
 #define CML_VERSION 100                        // Actual language version
@@ -17,17 +14,7 @@
 #define CML_STACK_LIMIT 128                    // Nesting depth limit
 
 namespace cml {
-    typedef void* (*cb_openfile_t)(const char*);
-    typedef int (*cb_getchar_t)(void*);
-    typedef void (*cb_closefile_t)(void*);
-    typedef size_t (*cb_filelen_t)(void*);
-    typedef void (*cb_readfile_t)(void*, char*);
-
-    extern cb_openfile_t g_fpOpenFile;
-    extern cb_getchar_t g_fpGetChar;
-    extern cb_closefile_t g_fpCloseFile;
-    extern cb_filelen_t g_fpFileLen;
-    extern cb_readfile_t g_fpReadFile;
+    void SetFileCallbacks(SCallbackInfo info);
 
     enum class ETextError : uint32_t {
         Ok,                     // We`re cool
@@ -67,7 +54,7 @@ namespace cml {
     */
     class CTextParser {
         struct IncludeNode {
-            hlib::CString sPath;
+            string_t sPath;
             void* pFile = NULL;
 
             size_t iLine = 1;
@@ -109,12 +96,12 @@ namespace cml {
             ParentPath
         };
         
-        hlib::CArray<char> m_sLexemBuffer;
-        hlib::CString m_sCurrentName;
+        array_t<char> m_sLexemBuffer;
+        string_t m_sCurrentName;
 
-        hlib::CStack<IncludeNode> m_aFilesStack;
-        hlib::CStack<CObject> m_aStack;
-        hlib::CStack<ScobeNode> m_aScobesStack;
+        stack_t<IncludeNode> m_aFilesStack;
+        stack_t<CObject> m_aStack;
+        stack_t<ScobeNode> m_aScobesStack;
 
         CObject m_pRootObject = cml::NIL;
 

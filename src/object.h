@@ -1,7 +1,8 @@
 #ifndef CML_DATAFILE_OBJECTS_H
 #define CML_DATAFILE_OBJECTS_H
 
-#include "include/CML.h"
+#include "CML.h"
+
 #include "hlib/String.h"
 #include "hlib/Array.h"
 #include "hlib/Table.h"
@@ -144,7 +145,7 @@ namespace cml {
     };
 
     class CStringObject final : public IObject {
-        hlib::CString m_sData;
+        string_t m_sData;
 
         public:
             int_t AsInt() const;
@@ -179,7 +180,7 @@ namespace cml {
     class CArrayObject final : public IObject {
         constexpr static const char* s_sName = "<array>";
 
-        hlib::CArray<IObject*> m_pData;
+        array_t<IObject*> m_pData;
 
         public:
             int_t AsInt() const;
@@ -214,7 +215,7 @@ namespace cml {
     class CDictObject final : public IObject {
         constexpr static const char* s_sName = "<table>";
 
-        hlib::CBinTable<hlib::CString, IObject*> m_dTable;
+        table_t<string_t, IObject*> m_dTable;
 
         public:
             int_t AsInt() const;

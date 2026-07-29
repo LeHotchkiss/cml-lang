@@ -1,13 +1,17 @@
-#include "cbpp/CML.h"
+#include "CML.h"
 
 #include <math.h>
+#include <string.h>
 #include <ctype.h>
 
-#include "engine/datafile/object.h"
+#include "hlib/New.h"
+
+#include "src/object.h"
+#include "src/settings.h"
 
 // CObject
 
-namespace cbpp::cdf {
+namespace cml {
     static const char* g_sNullString = "(null)";
 
     CObject::CObject(int_t iValue) {
@@ -71,7 +75,7 @@ namespace cbpp::cdf {
     void CObject::Merge(CObject pSource) { m_pObj->Merge(pSource); }
 }
 
-namespace cbpp::cdf {
+namespace cml {
     int_t CNullObject::AsInt() const {
         return 0;
     }
@@ -122,7 +126,7 @@ namespace cbpp::cdf {
 
 // CIntObject
 
-namespace cbpp::cdf {
+namespace cml {
     int_t CIntObject::AsInt() const {
         return m_iData;
     }
@@ -191,7 +195,7 @@ namespace cbpp::cdf {
 
 // CBinaryObject
 
-namespace cbpp::cdf {
+namespace cml {
     int_t CBinaryObject::AsInt() const {
         return 0;
     }
@@ -254,7 +258,7 @@ namespace cbpp::cdf {
 
 // CFloatObject
 
-namespace cbpp::cdf {
+namespace cml {
     int_t CFloatObject::AsInt() const {
         return (int_t)(m_fData);
     }
@@ -323,7 +327,7 @@ namespace cbpp::cdf {
 
 // CStringObject
 
-namespace cbpp::cdf {
+namespace cml {
     int_t CStringObject::AsInt() const {
         return 0;
     }
@@ -386,7 +390,7 @@ namespace cbpp::cdf {
 
 // CArrayObject
 
-namespace cbpp::cdf {
+namespace cml {
     int_t CArrayObject::AsInt() const {
         return 0;
     }
@@ -469,7 +473,7 @@ namespace cbpp::cdf {
 
 // CDictObject
 
-namespace cbpp::cdf {
+namespace cml {
     int_t CDictObject::AsInt() const {
         return 0;
     }
@@ -564,7 +568,7 @@ namespace cbpp::cdf {
     }
 }
 
-namespace cbpp::cdf {
+namespace cml {
     CObject CreateObject(EObjectClass iClass) {
         IObject* pObj = NULL;
 
@@ -589,16 +593,13 @@ namespace cbpp::cdf {
 
             case EObjectClass::Nil:
                 return NIL;
-
-            default:
-                CbAssertf(true, "Unknown object type (%i), update le enum", iClass);
         }
 
         return CObject(pObj);
     }
 
     void DeleteObject(CObject pObj) {
-        if( pObj == cdf::NIL ) {
+        if( pObj == cml::NIL ) {
             return;
         }
 

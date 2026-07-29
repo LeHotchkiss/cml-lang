@@ -6,18 +6,43 @@ namespace cml {
     void* OpenFileDefault(const char* sName) {
         return (void*)fopen(sName, "rb");
     }
-    cb_openfile_t g_fpOpenFile = OpenFileDefault;
 
     int GetCharDefault(void* pFile) {
         return fgetc((FILE*)pFile);
     }
-    cb_getchar_t g_fpGetChar = GetCharDefault;
 
     void CloseFileDefault(void* pFile) {
         fclose((FILE*)pFile);
     }
-    cb_closefile_t g_fpCloseFile = CloseFileDefault;
 
-    extern cb_filelen_t g_fpFileLen;
-    extern cb_readfile_t g_fpReadFile;
+    size_t FileLengthDefault(void* pFile) {
+        FILE* fp = (FILE*)pFile;
+        size_t out = 0, oldPos = ftell(fp);
+
+        fseek(fp, 0, SEEK_END);
+        out = (size_t)(ftell(fp));
+        fseek(fp, oldPos, SEEK_SET);
+
+        return out;
+    }
+
+    void ReadFileDefault(void* pFile, char* pBuffer) {
+        size_t iLen = FileLengthDefault(pFile);
+
+        fread(pBuffer, iLen, 1, (FILE*)pFile);
+    }
+}
+
+namespace cml {
+    static SCallbackInfo s_callbacksInfo = {
+        OpenFileDefault,
+        CloseFileDefault,
+        FileLengthDefault,
+        ReadFileDefault,
+        GetCharDefault
+    };
+
+    void SetFileCallbacks(SCallbackInfo info) {
+        s_callbacksInfo = info;
+    }
 }

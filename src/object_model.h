@@ -8,13 +8,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "src/settings.h"
+
 namespace cml {
-    // Integer type to use
-    typedef int32_t int_t;
-
-    // Floating-point type to use
-    typedef float float_t;
-
     enum class EObjectClass {
         Nil,
         Object,

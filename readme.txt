@@ -9,6 +9,20 @@
 A human-readable markup language with an extremely simple syntax.
 Current standart version: 100
 
+0) Compiling
+
+    0.1) LINUX
+
+        Basically all linux distros should work. You need to have a GCC version 
+        that supports C++17 installed.
+
+        Then just run the build-static script.
+
+    0.2) WINDOWS
+    
+        MinGW with C++17 support is required. The BAT file is in progress of being made.
+        If i would feel particularly zesty, i might add MSVC support.
+
 We have 7 supported types:
     - Numbers, which can be either integers or floats, both 32-bit
     - Strings with UTF-8 support
@@ -119,4 +133,5 @@ Here are some examples:
     8.3) concat "path.to.parent_table"
 
         Copies parent`s entries in the current table (only tables are supported as child and parent objects).
-        Parent base values can later be overriden by redefining them in the child object after the keyword invocation.
+        Parent base values can later be overriden by redefining them in the child object after the 
+        keyword invocation.

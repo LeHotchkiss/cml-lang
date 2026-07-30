@@ -30,7 +30,8 @@ namespace cml {
         ObjIndex,               // Indexing an object
         ArrayAccess,            // Accessing an array with '.'
         BadIndex,               // NaN or float is used as index
-        BadSeparator            // Something except '.' is used as a separator
+        BadSeparator,           // Something except '.' is used as a separator
+        BadPath
     };
 
     class IObject;

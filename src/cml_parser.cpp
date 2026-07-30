@@ -42,7 +42,8 @@ namespace cml {
         "Indexing a table",
         "Accessing an array with '.'",
         "Bad array index",
-        "Bad name separator"
+        "Bad name separator",
+        "Bad path syntax"
     };
 
     static const char* g_aClassNames[] = {

@@ -1,0 +1,22 @@
+version 100
+
+test {
+    array [
+        1
+        2
+        
+        {
+            sub 52
+        }
+
+        [
+            3.14
+            53
+            12345
+        ]
+    ]
+
+    object {
+        bebra "hello!"
+    }
+}

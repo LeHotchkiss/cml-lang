@@ -1,5 +1,19 @@
 #!/bin/sh
 
+echo "Building Hotchlib..."
+
+cd ./hotchlib
+./build-static
+
+if [ $? -ne 0 ]; then
+    echo "Failed to build Hotchlib"
+    exit 1
+fi
+
+cd ..
+
+mv ./hotchlib/libhotch.a ./libhotch.a
+
 rm -r ./.obj
 mkdir ./.obj
 
@@ -8,7 +22,7 @@ echo "Compiling a static library..."
 cd src
 for CFILE in $(find . -maxdepth 1 -name "*.cpp"); do
 	echo "	File: $CFILE"
-	g++ -O2 -std=c++17 -c "$CFILE" -o "../.obj/$CFILE.o" -I"../include" -I"../hotchlib/include" -I".."
+	g++ -O2 -std=c++17 -c -g3 "$CFILE" -o "../.obj/$CFILE.o" -I"../include" -I"../hotchlib/include" -I".."
 
 	if [ $? -ne 0 ]; then
         echo "Compilation failed"

@@ -740,7 +740,128 @@ namespace cml {
         return m_iStatus;
     }
 
+    #define IS_SPACE_CHAR(c) ((c) == ' ' || (c) == '\t' || (c) == '\n' || (c) == '\r')
+
     CPathAccess AccessObject(CObject pObj, const char* sPath) {
-        return CPathAccess( cml::NIL, EPathError::NotFound );
+        CObject obj = pObj;
+        array_t<char> name;
+
+        const char* p = sPath;
+
+        if (*p == '\0') {
+            return CPathAccess(cml::NIL, EPathError::BadPath);
+        }
+
+        while (*p != '\0' && IS_SPACE_CHAR(*p)) p++;
+
+        while (*p != '\0') {
+            char c = *p;
+
+            if (IS_SPACE_CHAR(c)) {
+                while (*p != '\0' && IS_SPACE_CHAR(*p)) p++;
+                break;
+            }
+
+            if (c == '.') {
+                if (name.Length() != 0) {
+                    array_t<char> tmp = name;
+                    tmp.PushBack('\0');
+                    const char* sName = tmp.Data();
+
+                    CObject access = obj[sName];
+                    if (access == cml::NIL) {
+                        return CPathAccess(cml::NIL, EPathError::NotFound);
+                    }
+                    obj = access;
+                    name.Clear();
+                }
+
+                p++;
+                if (*p == '\0') {
+                    return CPathAccess(cml::NIL, EPathError::BadPath);
+                }
+                continue;
+            }
+
+            if (c == '[') {
+                if (name.Length() != 0) {
+                    array_t<char> tmp = name;
+                    tmp.PushBack('\0');
+                    const char* sName = tmp.Data();
+
+                    CObject access = obj[sName];
+                    if (access == cml::NIL) {
+                        return CPathAccess(cml::NIL, EPathError::NotFound);
+                    }
+                    obj = access;
+                    name.Clear();
+                }
+
+                p++;
+
+                if (*p == '\0' || *p == ']') {
+                    return CPathAccess(cml::NIL, EPathError::BadIndex);
+                }
+
+                array_t<char> index;
+
+                while (*p != '\0' && *p != ']') {
+                    char k = *p;
+                    if (k >= '0' && k <= '9') {
+                        index.PushBack(k);
+                        p++;
+                    } else {
+                        return CPathAccess(cml::NIL, EPathError::BadIndex);
+                    }
+                }
+
+                if (*p != ']') {
+                    return CPathAccess(cml::NIL, EPathError::BadIndex);
+                }
+
+                p++;
+
+                index.PushBack('\0');
+                int iIndex = atoi(index.Data());
+
+                CObject access = obj[iIndex];
+                if (access == cml::NIL) {
+                    return CPathAccess(cml::NIL, EPathError::NotFound);
+                }
+
+                obj = access;
+                continue;
+            }
+
+            if (c == ']') {
+                return CPathAccess(cml::NIL, EPathError::BadPath);
+            }
+
+            if (c == '.' || c == '[') {
+                return CPathAccess(cml::NIL, EPathError::BadPath);
+            }
+
+            name.PushBack(c);
+            p++;
+        }
+
+        if (name.Length() != 0) {
+            array_t<char> tmp = name;
+            tmp.PushBack('\0');
+            const char* sName = tmp.Data();
+
+            CObject access = obj[sName];
+            if (access == cml::NIL) {
+                return CPathAccess(cml::NIL, EPathError::NotFound);
+            }
+            obj = access;
+            name.Clear();
+        }
+
+        if (obj == cml::NIL) {
+            return CPathAccess(cml::NIL, EPathError::NotFound);
+        }
+
+        return CPathAccess(obj, EPathError::Ok);
     }
 }

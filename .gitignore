@@ -1,4 +1,4 @@
 .obj/*
-./*.a
-./*.so
+*.a
+*.so
 cmltest

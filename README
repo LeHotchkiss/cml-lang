@@ -4,7 +4,7 @@
                            / /___/ /  / / /___
                            \____/_/  /_/_____/
                    
-                          Cool Markdown Language
+                          Cool Markup Language
 
 A human-readable markup language with an extremely simple syntax.
 Current standart version: 100
@@ -16,7 +16,7 @@ Current standart version: 100
         Basically all linux distros should work. You need to have a GCC version 
         that supports C++17 installed.
 
-        Then just run the build-static script.
+        Then just run the build script.
 
     0.2) WINDOWS
     

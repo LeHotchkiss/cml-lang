@@ -63,7 +63,7 @@ namespace cml {
     CObject::operator float_t() const { return m_pObj->AsFloat(); }
     CObject::operator const char*() const { return m_pObj->AsString(); }
     CObject::operator uint8_t*() { return m_pObj->AsBinary(); }
-    CObject::operator bool() const { return (*this) != cdf::NIL; }
+    CObject::operator bool() const { return (*this) != cml::NIL; }
 
     void CObject::Serialize(char* pBuffer) const { m_pObj->Serialize(pBuffer); }
 
@@ -574,22 +574,28 @@ namespace cml {
 
         switch(iClass) {
             case EObjectClass::Array:
-                pObj = cbpp::New<CArrayObject>(); break;
+                pObj = hlib::New<CArrayObject, cml_alloc_t<CArrayObject>>();
+                break;
 
             case EObjectClass::Binary:
-                pObj = cbpp::New<CBinaryObject>(); break;
+                pObj = hlib::New<CBinaryObject, cml_alloc_t<CBinaryObject>>();
+                break;
 
             case EObjectClass::Float:
-                pObj = cbpp::New<CFloatObject>(); break;
+                pObj = hlib::New<CFloatObject, cml_alloc_t<CFloatObject>>();
+                break;
 
             case EObjectClass::Integer:
-                pObj = cbpp::New<CIntObject>(); break;
+                pObj = hlib::New<CIntObject, cml_alloc_t<CIntObject>>();
+                break;
 
             case EObjectClass::Object:
-                pObj = cbpp::New<CDictObject>(); break;
+                pObj = hlib::New<CDictObject, cml_alloc_t<CDictObject>>();
+                break;
 
             case EObjectClass::String:
-                pObj = cbpp::New<CStringObject>(); break;
+                pObj = hlib::New<CStringObject, cml_alloc_t<CStringObject>>();
+                break;
 
             case EObjectClass::Nil:
                 return NIL;
@@ -603,7 +609,7 @@ namespace cml {
             return;
         }
 
-        cbpp::Delete(pObj.GetPointer());
+        hlib::Delete(pObj.GetPointer());
     }
 
     void PrintTabs(size_t iNum) {
@@ -613,7 +619,7 @@ namespace cml {
     }
 
     void PrintObject(CObject pObj, size_t iDepth) {
-        if(pObj == cdf::NIL) {
+        if(pObj == cml::NIL) {
             PrintTabs(iDepth);
             puts("NIL");
         }
@@ -666,7 +672,7 @@ namespace cml {
     }
 
     CObject CopyObject(CObject pObj) {
-        if(pObj == cdf::NIL) { return cdf::NIL; }
+        if(pObj == cml::NIL) { return cml::NIL; }
 
         switch( pObj.Class() ) {
             case EObjectClass::Integer: {
@@ -717,7 +723,7 @@ namespace cml {
             }
         }
 
-        return cdf::NIL;
+        return cml::NIL;
     }
 
     CPathAccess::CPathAccess(CObject pObj, EPathError iStatus) : m_pPathObj(pObj), m_iStatus(iStatus) { }
@@ -735,7 +741,6 @@ namespace cml {
     }
 
     CPathAccess AccessObject(CObject pObj, const char* sPath) {
-        CbAssert(true, "FEATURE NOT IMPLEMENTED");
-        return CPathAccess( cdf::NIL, EPathError::NotFound );
+        return CPathAccess( cml::NIL, EPathError::NotFound );
     }
 }

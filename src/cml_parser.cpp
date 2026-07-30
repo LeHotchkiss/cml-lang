@@ -1,11 +1,11 @@
-#include "cbpp/CML.h"
+#include "CML.h"
 
 #include <ctype.h>
 #include <stdio.h>
 
-#include "cbpp/Filesystem.h"
+#include "src/settings.h"
 
-namespace cbpp::cdf {
+namespace cml {
     static const char* g_aErrorTexts[] = {
         "Ok",
 
@@ -68,7 +68,7 @@ namespace cbpp::cdf {
 
     CTextParser::IncludeNode::~IncludeNode() {
         if(pFile != NULL) {
-            CloseFile(pFile);
+            s_callbacksInfo.fileClose(pFile);
             pFile = NULL;
         }
     }
@@ -94,7 +94,7 @@ namespace cbpp::cdf {
     }
 
     ETextError CTextParser::AddFile(const char* sPath) {
-        cbpp::IFile* pFile = cbpp::OpenFile(sPath, "rb");
+        void* pFile = s_callbacksInfo.fileOpen(sPath);
         if(pFile == NULL) {
             return ETextError::NoFile;
         }
@@ -106,17 +106,17 @@ namespace cbpp::cdf {
 
         return ETextError::Ok;
     }
-    
+
     int CTextParser::Peek() {
         if(m_aFilesStack.Length() == 0) {
             return 0;
         }
 
-        cbpp::IFile* pFile = m_aFilesStack.Head().pFile;
+        void* pFile = m_aFilesStack.Head().pFile;
 
-        int iChar = pFile->GetChar();
+        int iChar = s_callbacksInfo.fileReadByte(pFile);
 
-        if( pFile->IsEOF() ) {          // this file is over, step out and resume    
+        if( iChar < 0 ) {          // this file is over, step out and resume    
             m_iCol = 1;
             m_iLine = m_aFilesStack.Head().iLine;  
 
@@ -308,7 +308,7 @@ namespace cbpp::cdf {
             return ETextError::BadReference;
         }
 
-        int iNumberTest = cbpp::IsNumber(m_sLexemBuffer.Data());
+        int iNumberTest = hlib::IsNumber(m_sLexemBuffer.Data());
 
         float_t fData = 0.0f;
         int_t iData = 0;
@@ -351,7 +351,7 @@ namespace cbpp::cdf {
                 return ETextError::BadVersion;
             }
 
-            if(iData > CBPP_CML_VERSION || iData < CBPP_CML_VERSION_LEAST) {
+            if(iData > CML_VERSION || iData < CML_VERSION_LEAST) {
                 return ETextError::VersionMismatch;
             }
             
@@ -460,7 +460,7 @@ namespace cbpp::cdf {
 
                     CObject pParent = access.Object();
 
-                    if(pParent == cdf::NIL) {
+                    if(pParent == cml::NIL) {
                         return ETextError::ParentNotFound;
                     }
                     
@@ -469,7 +469,7 @@ namespace cbpp::cdf {
                         CObject pParents = pParent[i];
                         CObject pOurs = pHead[sName];
 
-                        if(pOurs == cdf::NIL) {
+                        if(pOurs == cml::NIL) {
                             pHead.Push(sName, CopyObject(pParents));            // new value
                             
                         } else {
@@ -513,7 +513,7 @@ namespace cbpp::cdf {
                     CObject pHead = m_aStack.Head();
                     CObject pTest = pHead[m_sCurrentName.String()];
 
-                    if(!m_bInsideArray && pTest != cdf::NIL) { // overriding
+                    if(!m_bInsideArray && pTest != cml::NIL) { // overriding
                         DeleteObject(pTest);
                     }
                     
@@ -523,7 +523,7 @@ namespace cbpp::cdf {
                     } else {
                         pStringObj = this->ResolveFileRef(iRet);
 
-                        if(pStringObj == cdf::NIL) {
+                        if(pStringObj == cml::NIL) {
                             return iRet;
                         }
 
@@ -553,14 +553,14 @@ namespace cbpp::cdf {
                 return ETextError::BadReference;
             }
 
-            if(m_aStack.Length() == CBPP_CML_STACK_LIMIT) {
+            if(m_aStack.Length() == CML_STACK_LIMIT) {
                 return ETextError::StackOverflow;
             }
             
             CObject pHead = m_aStack.Head();
             CObject pDict = pHead[m_sCurrentName.String()];
 
-            if(pDict == cdf::NIL) {
+            if(pDict == cml::NIL) {
                 pDict = CreateObject(EObjectClass::Object);
             }
 
@@ -594,14 +594,14 @@ namespace cbpp::cdf {
                 return ETextError::BadReference;
             }
 
-            if(m_aStack.Length() == CBPP_CML_STACK_LIMIT) {
+            if(m_aStack.Length() == CML_STACK_LIMIT) {
                 return ETextError::StackOverflow;
             }
 
             CObject pHead = m_aStack.Head();
             CObject pArr = pHead[m_sCurrentName.String()];
             
-            if(pArr == cdf::NIL) {
+            if(pArr == cml::NIL) {
                 pArr = CreateObject(EObjectClass::Array);
             }
 
@@ -642,43 +642,41 @@ namespace cbpp::cdf {
     }
 
     CObject CTextParser::ResolveFileRef(ETextError& iCode) {
-        cbpp::IFile* pFile = OpenFile(m_sLexemBuffer.Data(), "rb");
+        void* pFile = s_callbacksInfo.fileOpen(m_sLexemBuffer.Data());
 
         if(pFile == NULL) {
             iCode = ETextError::BadFileRef;
-            return cdf::NIL;
+            return cml::NIL;
         }
 
         char* pBuffer = NULL;
-        const size_t iFileLen = pFile->Length();
+        const size_t iFileLen = s_callbacksInfo.fileLength(pFile);
 
-        if(iFileLen > CBPP_CML_MAX_REFFILE) {
+        if(iFileLen > CML_MAX_REFFILE) {
             iCode = ETextError::RefHugeFile;
-            return cdf::NIL;
+            return cml::NIL;
         }
 
         CObject pRet;
 
         if(m_iRefType == ERefType::Text) {
-            pBuffer = Malloc<char>( iFileLen+1 );
+            pBuffer = cml_alloc_t<char>::Malloc(iFileLen+1);
             pBuffer[iFileLen] = '\0';
-            pFile->ReadAll(pBuffer);
+            s_callbacksInfo.fileReadFull(pFile, pBuffer);
 
             pRet = CreateObject(EObjectClass::String);
             pRet = (const char*)(pBuffer);
 
         } else if(m_iRefType == ERefType::Binary) {
-            pBuffer = Malloc<char>( iFileLen );
-            pFile->ReadAll(pBuffer);
+            pBuffer = cml_alloc_t<char>::Malloc(iFileLen);
+            s_callbacksInfo.fileReadFull(pFile, pBuffer);
 
             pRet = CreateObject(EObjectClass::Binary);
             pRet.SetBinaryData((const uint8_t*)pBuffer, iFileLen);
 
-        } else {
-            CbAssert(true, "how?");
         }
 
-        Free(pBuffer);
+        cml_alloc_t<char>::Free(pBuffer);
         return pRet;
     }
 
@@ -694,7 +692,7 @@ namespace cbpp::cdf {
         m_iCol = 1; m_iLine = 1;
 
         DeleteObject(m_pRootObject);
-        m_pRootObject = cdf::NIL;
+        m_pRootObject = cml::NIL;
     }
 
     ETextError CTextParser::PushFloat(const char* sName, float_t fValue) {
@@ -705,7 +703,7 @@ namespace cbpp::cdf {
         CObject pHead = m_aStack.Head();
         CObject pTest = pHead[sName];
 
-        if(pTest != cdf::NIL) {
+        if(pTest != cml::NIL) {
             if( pTest.Class() == EObjectClass::Float ) {
                 pTest = fValue;
             } else {
@@ -730,7 +728,7 @@ namespace cbpp::cdf {
         CObject pHead = m_aStack.Head();
         CObject pTest = pHead[sName];
 
-        if(pTest != cdf::NIL) {
+        if(pTest != cml::NIL) {
             if( pTest.Class() == EObjectClass::Integer ) {
                 pTest = iValue;
             } else {
@@ -798,12 +796,12 @@ namespace cbpp::cdf {
     }
 
     CPathAccess CTextParser::operator[](const char* sPath) {
-        if(m_pRootObject == cdf::NIL) { return CPathAccess(cdf::NIL, EPathError::NotFound); }
+        if(m_pRootObject == cml::NIL) { return CPathAccess(cml::NIL, EPathError::NotFound); }
         return AccessObject(m_pRootObject, sPath);
     }
 
     CTextParser& CTextParser::operator=(const CTextParser& Other) {
-        if(m_pRootObject != cdf::NIL) {
+        if(m_pRootObject != cml::NIL) {
             DeleteObject(m_pRootObject);
         }
 
@@ -814,31 +812,5 @@ namespace cbpp::cdf {
 
     CTextParser::~CTextParser() {
         DeleteObject(m_pRootObject);
-    }
-
-    // Writing functions
-
-    bool WriteChar(int iChar, void* pTarget, bool bIsFile) {
-        if(bIsFile) {
-            cbpp::IFile* pFile = (cbpp::IFile*)pTarget;
-
-            if(pFile->Write(1, &iChar) != 1) {
-                return false;
-            }
-
-            return true;
-        }
-
-        *(char*)(pTarget) = (char)iChar;
-        
-        return true;
-    }
-
-    size_t WriteObject(CObject pObj, char* sBuffer, size_t iBufferLen, bool bPretty) {
-        return 0;
-    }
-
-    size_t WriteObject(CObject pObj, const char* sPath, bool bPretty) {
-        return 0;
     }
 }

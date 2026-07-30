@@ -27,7 +27,7 @@ namespace cml {
     using array_t = hlib::CArray<value_t, cml_alloc_t<value_t>>;
 
     template <typename key_t, typename value_t> 
-    using table_t = hlib::CBinTable<key_t, value_t, cml_alloc_t<hlib::Pair<key_t, value_t>>>;
+    using table_t = hlib::CBinTable<key_t, value_t, cml_alloc_t<hlib::CPair<key_t, value_t>>>;
 
     template <typename value_t>
     using stack_t = hlib::CStack<value_t, cml_alloc_t<value_t>>;
@@ -45,6 +45,8 @@ namespace cml {
         cml_readfile_t fileReadFull;
         cml_getchar_t fileReadByte;
     };
+
+    extern SCallbackInfo s_callbacksInfo;
 }
 
 #endif

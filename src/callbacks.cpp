@@ -8,7 +8,11 @@ namespace cml {
     }
 
     int GetCharDefault(void* pFile) {
-        return fgetc((FILE*)pFile);
+        int c = fgetc((FILE*)pFile);
+        if(feof((FILE*)pFile)) {
+            return -1;
+        }
+        return c;
     }
 
     void CloseFileDefault(void* pFile) {
@@ -34,7 +38,7 @@ namespace cml {
 }
 
 namespace cml {
-    static SCallbackInfo s_callbacksInfo = {
+    SCallbackInfo s_callbacksInfo = {
         OpenFileDefault,
         CloseFileDefault,
         FileLengthDefault,

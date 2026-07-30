@@ -171,8 +171,8 @@ namespace cml {
             ~CTextParser();
     };
 
-    size_t WriteObject(CObject pObj, char* sBuffer, size_t iBufferLen, bool bPretty = true);
-    size_t WriteObject(CObject pObj, const char* sPath, bool bPretty = true);
+    //size_t WriteObject(CObject pObj, char* sBuffer, size_t iBufferLen, bool bPretty = true);
+    //size_t WriteObject(CObject pObj, const char* sPath, bool bPretty = true);
 }
 
 #endif

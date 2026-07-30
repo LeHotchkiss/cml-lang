@@ -1,3 +1,4 @@
 [submodule "hotchlib"]
 	path = hotchlib
 	url = https://github.com/LeHotchkiss/hotchlib.git
+    branch = master

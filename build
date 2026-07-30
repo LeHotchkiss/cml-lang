@@ -1,0 +1,55 @@
+#!/bin/sh
+
+rm -r ./.obj
+mkdir ./.obj
+
+echo "Compiling a static library..."
+
+cd src
+for CFILE in $(find . -maxdepth 1 -name "*.cpp"); do
+	echo "	File: $CFILE"
+	g++ -O2 -std=c++17 -c "$CFILE" -o "../.obj/$CFILE.o" -I"../include" -I"../hotchlib/include" -I".."
+
+	if [ $? -ne 0 ]; then
+        echo "Compilation failed"
+        exit 1
+    fi
+done
+
+echo "Linking..."
+cd ..
+
+ar rcs libcml.a $(find ./.obj -maxdepth 1 -name "*.o")
+
+if [ $? -ne 0 ]; then
+	echo "Linking failed"
+    exit 1
+fi
+
+rm -r ./.obj
+mkdir ./.obj
+
+echo "Compiling a shared library..."
+
+cd src
+for CFILE in $(find . -maxdepth 1 -name "*.cpp"); do
+	echo "	File: $CFILE"
+	g++ -O2 -fPIC -std=c++17 -c "$CFILE" -o "../.obj/$CFILE.o" -I"../include" -I"../hotchlib/include" -I".."
+
+	if [ $? -ne 0 ]; then
+        echo "Compilation failed"
+        exit 1
+    fi
+done
+
+echo "Linking..."
+cd ..
+
+g++ -shared $(find ./.obj -maxdepth 1 -name "*.o") -o libcml.so
+
+if [ $? -ne 0 ]; then
+	echo "Linking failed"
+    exit 1
+fi
+
+rm -r ./.obj

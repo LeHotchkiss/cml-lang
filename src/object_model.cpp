@@ -574,27 +574,27 @@ namespace cml {
 
         switch(iClass) {
             case EObjectClass::Array:
-                pObj = hlib::New<CArrayObject, cml_alloc_t<CArrayObject>>();
+                pObj = hlib::New<CArrayObject, cml_alloc_t>();
                 break;
 
             case EObjectClass::Binary:
-                pObj = hlib::New<CBinaryObject, cml_alloc_t<CBinaryObject>>();
+                pObj = hlib::New<CBinaryObject, cml_alloc_t>();
                 break;
 
             case EObjectClass::Float:
-                pObj = hlib::New<CFloatObject, cml_alloc_t<CFloatObject>>();
+                pObj = hlib::New<CFloatObject, cml_alloc_t>();
                 break;
 
             case EObjectClass::Integer:
-                pObj = hlib::New<CIntObject, cml_alloc_t<CIntObject>>();
+                pObj = hlib::New<CIntObject, cml_alloc_t>();
                 break;
 
             case EObjectClass::Object:
-                pObj = hlib::New<CDictObject, cml_alloc_t<CDictObject>>();
+                pObj = hlib::New<CDictObject, cml_alloc_t>();
                 break;
 
             case EObjectClass::String:
-                pObj = hlib::New<CStringObject, cml_alloc_t<CStringObject>>();
+                pObj = hlib::New<CStringObject, cml_alloc_t>();
                 break;
 
             case EObjectClass::Nil:
@@ -818,7 +818,7 @@ namespace cml {
                 if (*p != ']') {
                     return CPathAccess(cml::NIL, EPathError::BadIndex);
                 }
-
+                
                 p++;
 
                 index.PushBack('\0');

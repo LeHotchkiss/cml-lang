@@ -10,8 +10,7 @@ namespace cml {
     /*
         Redefine this to use your custom allocator if needed
     */
-    template <typename T>
-    using cml_alloc_t = hlib::CDefaultAllocator<T>;
+    typedef hlib::CDefaultAllocator cml_alloc_t;
 
     // Integer type to use
     typedef int32_t int_t;
@@ -21,16 +20,16 @@ namespace cml {
 }
 
 namespace cml {
-    using string_t = hlib::CString<cml_alloc_t<char>>;
+    using string_t = hlib::CString<cml_alloc_t>;
 
     template <typename value_t> 
-    using array_t = hlib::CArray<value_t, cml_alloc_t<value_t>>;
+    using array_t = hlib::CArray<value_t, cml_alloc_t>;
 
     template <typename key_t, typename value_t> 
-    using table_t = hlib::CBinTable<key_t, value_t, cml_alloc_t<hlib::CPair<key_t, value_t>>>;
+    using table_t = hlib::CBinTable<key_t, value_t, cml_alloc_t>;
 
     template <typename value_t>
-    using stack_t = hlib::CStack<value_t, cml_alloc_t<value_t>>;
+    using stack_t = hlib::CStack<value_t, cml_alloc_t>;
 
     typedef void* (*cml_openfile_t)(const char*);
     typedef int (*cml_getchar_t)(void*);

@@ -2,6 +2,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "src/settings.h"
 
@@ -661,7 +662,7 @@ namespace cml {
         CObject pRet;
 
         if(m_iRefType == ERefType::Text) {
-            pBuffer = cml_alloc_t<char>::Malloc(iFileLen+1);
+            pBuffer = (char*)cml_alloc_t::Malloc(iFileLen+1);
             pBuffer[iFileLen] = '\0';
             s_callbacksInfo.fileReadFull(pFile, pBuffer);
 
@@ -669,15 +670,15 @@ namespace cml {
             pRet = (const char*)(pBuffer);
 
         } else if(m_iRefType == ERefType::Binary) {
-            pBuffer = cml_alloc_t<char>::Malloc(iFileLen);
+            pBuffer = (char*)cml_alloc_t::Malloc(iFileLen);
             s_callbacksInfo.fileReadFull(pFile, pBuffer);
 
             pRet = CreateObject(EObjectClass::Binary);
             pRet.SetBinaryData((const uint8_t*)pBuffer, iFileLen);
 
         }
-
-        cml_alloc_t<char>::Free(pBuffer);
+        
+        cml_alloc_t::Free(pBuffer);
         return pRet;
     }
 

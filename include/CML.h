@@ -14,6 +14,16 @@
 #define CML_STACK_LIMIT 128                    // Nesting depth limit
 
 namespace cml {
+    /*
+        Set file management callbacks for CML to use.
+        The behaviour of the functions must be as follows:
+        
+        + fileOpen:     Opens a file and returns a void* handle
+        + fileClose:    Does the opposite, frees the resources
+        + fileLength:   Returns length of the file in bytes
+        + fileReadFull: Reads the entire file to the providen buffer
+        + fileReadByte: Reads exactly one byte from the file, and returns -1 upon EOF
+    */
     void SetFileCallbacks(SCallbackInfo info);
 
     enum class ETextError : uint32_t {

@@ -42,7 +42,7 @@ namespace cml {
     class CBinaryObject final : public IObject {
         constexpr static const char* s_sName = "<binary>";
 
-        hlib::CArray<uint8_t> m_aData;
+        array_t<uint8_t> m_aData;
 
         public:
             int_t AsInt() const;

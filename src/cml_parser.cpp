@@ -662,7 +662,7 @@ namespace cml {
         CObject pRet;
 
         if(m_iRefType == ERefType::Text) {
-            pBuffer = (char*)cml_alloc_t::Malloc(iFileLen+1);
+            pBuffer = (char*)g_defaultAlloc.Malloc(iFileLen+1);
             pBuffer[iFileLen] = '\0';
             s_callbacksInfo.fileReadFull(pFile, pBuffer);
 
@@ -670,7 +670,7 @@ namespace cml {
             pRet = (const char*)(pBuffer);
 
         } else if(m_iRefType == ERefType::Binary) {
-            pBuffer = (char*)cml_alloc_t::Malloc(iFileLen);
+            pBuffer = (char*)g_defaultAlloc.Malloc(iFileLen);
             s_callbacksInfo.fileReadFull(pFile, pBuffer);
 
             pRet = CreateObject(EObjectClass::Binary);
@@ -678,7 +678,7 @@ namespace cml {
 
         }
         
-        cml_alloc_t::Free(pBuffer);
+        g_defaultAlloc.Free(pBuffer);
         return pRet;
     }
 

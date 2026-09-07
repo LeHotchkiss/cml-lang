@@ -48,6 +48,7 @@ namespace cml {
     };
 
     static const char* g_aClassNames[] = {
+        "NIL",
         "Table",
         "Array",
         "Binary",

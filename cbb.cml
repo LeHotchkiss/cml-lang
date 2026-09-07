@@ -1,0 +1,71 @@
+version 100
+
+cbb {
+    base {
+        depends []          # project-local dependencies
+        depends_ex []       # external dependencies
+
+        class "exe"
+
+        includes [ ]
+        source [ ]
+        lib [ ]
+
+        link [ ]
+        link_shared [ ]
+
+        compiler "g++"
+
+        cc_args ["-std=c++17" "-fno-exceptions"]
+        ld_args [ ]
+
+        out "test"
+    }
+
+    debug {
+        cc_args ["-g3"]
+    }
+
+    debug {
+        cc_args ["-O2"]
+    }
+}
+
+targets {
+    cbb {
+        concat "cbb.base"
+
+        depends_ex [
+            {
+                path "cml-lang/cml_lang.cml"
+                target "cml_lang"
+            }
+        ]
+
+        class "exe"
+
+        includes [
+            "."
+            "src"
+            "cml-lang"
+            "cml-lang/include"
+            "cml-lang/hotchlib/include"
+        ]
+
+        source [
+            "src/*.cpp"
+        ]
+
+        lib [
+            "cml-lang"
+            "cml-lang/hotchlib"
+        ]
+
+        link [
+            "libcml.a"
+            "libhotch.a"
+        ]
+
+        out "cbb_test"
+    }
+}

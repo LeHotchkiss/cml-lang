@@ -1,0 +1,66 @@
+version 100
+
+base_target {
+    depends []
+    depends_ex []
+
+    class "exe"
+
+    includes [ ]
+    source [ ]
+    lib [ ]
+
+    link [ ]
+    link_shared [ ]
+
+    compiler "g++"
+
+    cc_args ["-std=c++17" "-fno-exceptions"]
+    ld_args [ ]
+
+    out "test"
+}
+
+targets {
+    main {
+        concat "base_target"
+
+        depends_ex [
+            {
+                path "hotchlib/hotchlib.cml"
+                target "main"
+            }
+        ]
+
+        class "static"
+
+        includes [
+            "src" "include" "."
+            "hotchlib/include"
+        ]
+
+        source [
+            "src/*.cpp"
+        ]
+
+        lib [
+            "hotchlib"
+        ]
+
+        link [
+            "libhotch.a"
+        ]
+
+        cc_args [ "-O2" ]
+
+        out "libcml.a"
+    }
+
+    shared {
+        concat "targets.main"
+
+        class "shared"
+
+        out "libhotch.so"
+    }
+}

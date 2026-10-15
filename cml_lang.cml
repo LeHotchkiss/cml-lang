@@ -56,6 +56,14 @@ targets {
         out "libcml.a"
     }
 
+    main_pic {
+        concat "targets.main"
+
+        cc_args ["-fPIC"]
+
+        out "libcml.pic.a"
+    }
+
     shared {
         concat "targets.main"
 

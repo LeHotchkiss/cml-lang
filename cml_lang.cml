@@ -57,15 +57,41 @@ targets {
     }
 
     main_pic {
-        concat "targets.main"
+        concat "base_target"
 
-        cc_args ["-fPIC"]
+        depends_ex [
+            {
+                path "hotchlib/hotchlib.cml"
+                target "main_pic"
+            }
+        ]
+
+        class "static"
+
+        includes [
+            "src" "include" "."
+            "hotchlib/include"
+        ]
+
+        source [
+            "src/*.cpp"
+        ]
+
+        lib [
+            "hotchlib"
+        ]
+
+        link [
+            "libhotch.pic.a"
+        ]
+
+        cc_args [ "-O2" "-fPIC" ]
 
         out "libcml.pic.a"
     }
 
     shared {
-        concat "targets.main"
+        concat "base_target"
 
         class "shared"
 

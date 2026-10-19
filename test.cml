@@ -1,22 +1,66 @@
 version 100
 
-test {
-    array [
-        1
-        2
-        
-        {
-            sub 52
-        }
+cbb {
+    base {
+        depends []          # project-local dependencies
+        depends_ex []       # external dependencies
 
-        [
-            3.14
-            53
-            12345
+        class "exe"
+
+        includes [ ]
+        source [ ]
+        lib [ ]
+
+        link [ ]
+        link_shared [ ]
+
+        compiler "g++"
+
+        cc_args ["-std=c++17" "-fno-exceptions"]
+        ld_args [ ]
+
+        out "test"
+
+        exec []
+    }
+
+    debug {
+        cc_args ["-g3"]
+    }
+
+    release {
+        cc_args ["-O2"]
+    }
+}
+
+targets {
+    main {
+        concat "cbb.base"
+
+        source [ "include_test/test.cpp" ]
+        includes [ "." "include_test" ]
+
+        out "scan_test"
+
+        # executed based on it`s index in this list
+        exec [
+            # step 1 - before doing anything
+            {
+                command "move"
+                args ["source.a" "dest.a"]
+            }
+
+            # step 2 - after successful compiling
+            {
+                command "run"
+                args ["scripts/run_test.sh"]
+            }
+
+            #step 3 - after successful linking
+            {
+                command "copy"
+                args ["source.cpp" "dest.cpp"]
+            }
         ]
-    ]
-
-    object {
-        bebra "hello!"
     }
 }

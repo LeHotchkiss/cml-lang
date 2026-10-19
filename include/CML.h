@@ -69,6 +69,8 @@ namespace cml {
 
             size_t iLine = 1;
 
+            IncludeNode(const char*, void*, size_t);
+            IncludeNode(IncludeNode&& other);
             ~IncludeNode();
         };
 
@@ -76,7 +78,7 @@ namespace cml {
             char iScobe = '\0';
             size_t iLevel = 0;
         };
-
+        
         enum class EKeyword : uint8_t {
             Name,
             Include,

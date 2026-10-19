@@ -5,7 +5,7 @@
 int main(int argc, char** argv) {
     using namespace cml;
 
-    char* sPath = (char*)"./cbb.cml";
+    char* sPath = (char*)"./complete_example.cml";
 
     if(argc > 1) {
         sPath = (char*)argv[1];

@@ -4,7 +4,9 @@
 
 namespace cml {
     void* OpenFileDefault(const char* sName) {
-        return (void*)fopen(sName, "rb");
+        FILE* out = fopen(sName, "rb");
+
+        return (void*)out;
     }
 
     int GetCharDefault(void* pFile) {

@@ -69,6 +69,20 @@ namespace cml {
         return g_aClassNames[(size_t)iClass];
     }
 
+    CTextParser::IncludeNode::IncludeNode(const char* path, void* fd, size_t line) {
+        sPath = path;
+        pFile = fd;
+        iLine = line;
+    }
+
+    CTextParser::IncludeNode::IncludeNode(CTextParser::IncludeNode&& other) {
+        sPath = other.sPath;
+        pFile = other.pFile;
+        iLine = other.iLine;
+
+        other.pFile = NULL;
+    }
+
     CTextParser::IncludeNode::~IncludeNode() {
         if(pFile != NULL) {
             s_callbacksInfo.fileClose(pFile);

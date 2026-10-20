@@ -111,14 +111,6 @@ targets {
             "src/*.cpp"
         ]
 
-        lib [
-            "hotchlib"
-        ]
-
-        link [
-            "libhotch.pic.a"
-        ]
-
         cc_args [ "-O2" ]
 
         out "libcml.so"

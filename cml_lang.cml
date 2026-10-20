@@ -93,8 +93,34 @@ targets {
     shared {
         concat "base_target"
 
+        depends_ex [
+            {
+                path "hotchlib/hotchlib.cml"
+                target "shared"
+            }
+        ]
+
         class "shared"
 
-        out "libhotch.so"
+        includes [
+            "src" "include" "."
+            "hotchlib/include"
+        ]
+
+        source [
+            "src/*.cpp"
+        ]
+
+        lib [
+            "hotchlib"
+        ]
+
+        link [
+            "libhotch.pic.a"
+        ]
+
+        cc_args [ "-O2" ]
+
+        out "libcml.so"
     }
 }

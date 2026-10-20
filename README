@@ -71,6 +71,7 @@ Here are some examples:
     > }
 
     The nesting depth is limited by the compile-time constant.
+    The runtime order of entries is implementation-defined.
 
 5) Defining a list
 
@@ -85,6 +86,8 @@ Here are some examples:
 
     When describing list contents you only write values w/o their names.
     These values can later be accessed by their indices.
+
+    List submembers must retain the order they were declared.
 
 6) Comments
 
@@ -106,7 +109,7 @@ Here are some examples:
 
         Any string prefixed by '@' is considered as a 'file reference'.
         The parser will try opening said file, reading it`s contents as text and then pasting
-        it as this variable`s value. The path is relative to the current assets root path.
+        it as this variable`s value. The path is relative to the current PWD.
 
     7.3) Binary file reference
         > BinaryReference &"path/to/file"

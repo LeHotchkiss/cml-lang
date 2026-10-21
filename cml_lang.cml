@@ -51,9 +51,15 @@ targets {
             "libhotch.a"
         ]
 
-        cc_args [ "-O2" ]
+        cc_args [ ]
 
         out "libcml.a"
+    }
+
+    main_debug {
+        concat "targets.main"
+
+        cc_args ["-g3"]
     }
 
     main_pic {
@@ -122,5 +128,33 @@ targets {
         cc_args [ "-O2" ]
 
         out "libcml.so"
+    }
+
+    test {
+        concat "base_target"
+
+        depends [
+            "main_debug"
+        ]
+
+        class "exe"
+
+        source ["test.cpp"]
+
+        includes [
+            "." "include"
+            "hotchlib/include"
+        ]
+
+        lib [
+            "."
+            "hotchlib"
+        ]
+
+        link ["libcml.a" "libhotch.a"]
+
+        cc_args ["-g3"]
+
+        out "cmltest"
     }
 }

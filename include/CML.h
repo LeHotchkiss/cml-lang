@@ -115,6 +115,8 @@ namespace cml {
         stack_t<CObject> m_aStack;
         stack_t<ScobeNode> m_aScobesStack;
 
+        array_t<string_t> m_aIncludePaths, m_aSearchPaths;
+
         CObject m_pRootObject = cml::NIL;
 
         size_t m_iLine = 0, m_iCol = 0;
@@ -150,9 +152,11 @@ namespace cml {
         ETextError ProcessName();
 
         ETextError CheckScobes(int iChar);
+
+        void* FindFile(const char*, bool);
         
         public:
-            CTextParser() = default;
+            CTextParser();
 
             CTextParser& operator=(const CTextParser& Other);
 
@@ -161,6 +165,9 @@ namespace cml {
                 the Parse call.
             */
             void Reset();
+
+            void RegisterSearchPath(const char*);
+            void RegisterIncludePath(const char*);
 
             /*
                 Parse the said CML file

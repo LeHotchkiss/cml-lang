@@ -39,11 +39,11 @@ namespace cml {
     typedef void (*cml_readfile_t)(void*, char*);
 
     struct SCallbackInfo {
-        cml_openfile_t fileOpen;
-        cml_closefile_t fileClose;
-        cml_filelen_t fileLength;
-        cml_readfile_t fileReadFull;
-        cml_getchar_t fileReadByte;
+        cml_openfile_t      fileOpen;
+        cml_closefile_t     fileClose;
+        cml_filelen_t       fileLength;
+        cml_readfile_t      fileReadFull;
+        cml_getchar_t       fileReadByte;
     };
 
     extern SCallbackInfo s_callbacksInfo;

@@ -94,6 +94,10 @@ namespace cml {
         return isalpha(iChar) || (iChar == '_');
     }
 
+    CTextParser::CTextParser() {
+        m_pRootObject = NIL;
+    }
+
     CTextParser::EKeyword CTextParser::IsKeyword(const char* sName) {
         if( strcmp(sName, "include") == 0 ) {
             return EKeyword::Include;
@@ -111,7 +115,8 @@ namespace cml {
     }
 
     ETextError CTextParser::AddFile(const char* sPath) {
-        void* pFile = s_callbacksInfo.fileOpen(sPath);
+        void* pFile = this->FindFile(sPath, true);
+
         if(pFile == NULL) {
             return ETextError::NoFile;
         }
@@ -659,7 +664,7 @@ namespace cml {
     }
 
     CObject CTextParser::ResolveFileRef(ETextError& iCode) {
-        void* pFile = s_callbacksInfo.fileOpen(m_sLexemBuffer.Data());
+        void* pFile = this->FindFile(m_sLexemBuffer.Data(), false);
 
         if(pFile == NULL) {
             iCode = ETextError::BadFileRef;
@@ -825,6 +830,41 @@ namespace cml {
         m_pRootObject = CopyObject(Other.m_pRootObject);
 
         return *this;
+    }
+
+    void CTextParser::RegisterIncludePath(const char* sPath) {
+        m_aIncludePaths.PushBack(sPath);
+    }
+
+    void CTextParser::RegisterSearchPath(const char* sPath) {
+        m_aSearchPaths.PushBack(sPath);
+    }
+    
+    void* CTextParser::FindFile(const char* sourcePath, bool isHeader) {
+        string_t buffer;
+        array_t<string_t>& paths = isHeader ? m_aIncludePaths : m_aSearchPaths;
+
+        if(paths.Length() == 0) {
+            void* fp = s_callbacksInfo.fileOpen(sourcePath);
+            if(fp != NULL) {
+                return fp;
+            } else {
+                return NULL;
+            }
+        }
+
+        for(size_t i = 0; i < paths.Length(); i++) {
+            string_t& current = paths[i];
+
+            buffer.Printf("%s/%s", current.String(), sourcePath);
+            void* fp = s_callbacksInfo.fileOpen(buffer.String());
+
+            if(fp != NULL) {
+                return fp;
+            }
+        }
+        
+        return NULL;
     }
 
     CTextParser::~CTextParser() {

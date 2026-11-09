@@ -69,7 +69,7 @@ namespace cml {
         return g_aClassNames[(size_t)iClass];
     }
 
-    CTextParser::IncludeNode::IncludeNode(const char* path, void* fd, size_t line) {
+    CTextParser::IncludeNode::IncludeNode(const char* path, hlib::IFile* fd, size_t line) {
         sPath = path;
         pFile = fd;
         iLine = line;
@@ -85,7 +85,7 @@ namespace cml {
 
     CTextParser::IncludeNode::~IncludeNode() {
         if(pFile != NULL) {
-            s_callbacksInfo.fileClose(pFile);
+            hlib::FileClose(pFile);
             pFile = NULL;
         }
     }
@@ -115,7 +115,7 @@ namespace cml {
     }
 
     ETextError CTextParser::AddFile(const char* sPath) {
-        void* pFile = this->FindFile(sPath, true);
+        hlib::IFile* pFile = this->FindFile(sPath, true);
 
         if(pFile == NULL) {
             return ETextError::NoFile;
@@ -134,9 +134,9 @@ namespace cml {
             return 0;
         }
 
-        void* pFile = m_aFilesStack.Head().pFile;
+        hlib::IFile* pFile = m_aFilesStack.Head().pFile;
 
-        int iChar = s_callbacksInfo.fileReadByte(pFile);
+        int iChar = pFile->GetChar();
 
         if( iChar < 0 ) {          // this file is over, step out and resume    
             m_iCol = 1;
@@ -664,15 +664,19 @@ namespace cml {
     }
 
     CObject CTextParser::ResolveFileRef(ETextError& iCode) {
-        void* pFile = this->FindFile(m_sLexemBuffer.Data(), false);
+        using namespace hlib;
+
+        IFile* pFile = this->FindFile(m_sLexemBuffer.Data(), false);
 
         if(pFile == NULL) {
             iCode = ETextError::BadFileRef;
             return cml::NIL;
         }
 
+        SFileInfo info = pFile->GetInfo();
+
         char* pBuffer = NULL;
-        const size_t iFileLen = s_callbacksInfo.fileLength(pFile);
+        const size_t iFileLen = info.size;
 
         if(iFileLen > CML_MAX_REFFILE) {
             iCode = ETextError::RefHugeFile;
@@ -684,14 +688,16 @@ namespace cml {
         if(m_iRefType == ERefType::Text) {
             pBuffer = (char*)g_defaultAlloc.Malloc(iFileLen+1);
             pBuffer[iFileLen] = '\0';
-            s_callbacksInfo.fileReadFull(pFile, pBuffer);
+
+            pFile->Read(pBuffer, iFileLen);
 
             pRet = CreateObject(EObjectClass::String);
             pRet = (const char*)(pBuffer);
 
         } else if(m_iRefType == ERefType::Binary) {
             pBuffer = (char*)g_defaultAlloc.Malloc(iFileLen);
-            s_callbacksInfo.fileReadFull(pFile, pBuffer);
+
+            pFile->Read(pBuffer, iFileLen);
 
             pRet = CreateObject(EObjectClass::Binary);
             pRet.SetBinaryData((const uint8_t*)pBuffer, iFileLen);
@@ -840,12 +846,14 @@ namespace cml {
         m_aSearchPaths.PushBack(sPath);
     }
     
-    void* CTextParser::FindFile(const char* sourcePath, bool isHeader) {
+    hlib::IFile* CTextParser::FindFile(const char* sourcePath, bool isHeader) {
+        using namespace hlib;
+
         string_t buffer;
         array_t<string_t>& paths = isHeader ? m_aIncludePaths : m_aSearchPaths;
 
         if(paths.Length() == 0) {
-            void* fp = s_callbacksInfo.fileOpen(sourcePath);
+            IFile* fp = FileOpen(sourcePath, hlib::EFileMode::Read);
             if(fp != NULL) {
                 return fp;
             } else {
@@ -857,7 +865,7 @@ namespace cml {
             string_t& current = paths[i];
 
             buffer.Printf("%s/%s", current.String(), sourcePath);
-            void* fp = s_callbacksInfo.fileOpen(buffer.String());
+            IFile* fp = FileOpen(buffer.String(), hlib::EFileMode::Read);
 
             if(fp != NULL) {
                 return fp;

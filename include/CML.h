@@ -7,25 +7,17 @@
 #include "src/settings.h"
 #include "src/object_model.h"
 
-#define CML_VERSION 100                        // Actual language version
-#define CML_VERSION_LEAST 100                  // Any versions below this are considered deprecated
-#define CML_MAX_REFFILE (64 * (1 << 20))       // File reference size limit, 64 MB by default
+#include "hlib/Filesystem.h"
 
-#define CML_STACK_LIMIT 128                    // Nesting depth limit
+#define CML_VERSION                     100                     // Actual language version
+#define CML_VERSION_LEAST               100                     // Any versions below this are considered deprecated
+#define CML_MAX_REFFILE                 (64 * (1 << 20))        // File reference size limit, 64 MB by default
+
+#define CML_STACK_LIMIT                 128                     // Nesting depth limit
+
+#define CDF_MAGIC_NUMBER                (*((uint32_t*)("CDF")))
 
 namespace cml {
-    /*
-        Set file management callbacks for CML to use.
-        The behaviour of the functions must be as follows:
-        
-        + fileOpen:     Opens a file and returns a void* handle
-        + fileClose:    Does the opposite, frees the resources
-        + fileLength:   Returns length of the file in bytes
-        + fileReadFull: Reads the entire file to the providen buffer
-        + fileReadByte: Reads exactly one byte from the file, and returns -1 upon EOF
-    */
-    void SetFileCallbacks(SCallbackInfo info);
-
     enum class ETextError : uint32_t {
         Ok,                     // We`re cool
 
@@ -56,7 +48,14 @@ namespace cml {
         RefHugeFile             // The referenced file exceeds le limit
     };
 
+    enum class EBinaryError : uint32_t {
+        Ok,
+
+        MagicNumberMismatch     // file providen is not a CDF one
+    };
+
     const char* StringError(ETextError);
+    const char* StringError(EBinaryError);
     const char* StringError(EPathError);
 
     /*
@@ -65,11 +64,11 @@ namespace cml {
     class CTextParser {
         struct IncludeNode {
             string_t sPath;
-            void* pFile = NULL;
+            hlib::IFile* pFile = NULL;
 
             size_t iLine = 1;
 
-            IncludeNode(const char*, void*, size_t);
+            IncludeNode(const char*, hlib::IFile*, size_t);
             IncludeNode(IncludeNode&& other);
             ~IncludeNode();
         };
@@ -153,7 +152,7 @@ namespace cml {
 
         ETextError CheckScobes(int iChar);
 
-        void* FindFile(const char*, bool);
+        hlib::IFile* FindFile(const char*, bool);
         
         public:
             CTextParser();
@@ -190,8 +189,26 @@ namespace cml {
             ~CTextParser();
     };
 
-    //size_t WriteObject(CObject pObj, char* sBuffer, size_t iBufferLen, bool bPretty = true);
-    //size_t WriteObject(CObject pObj, const char* sPath, bool bPretty = true);
+    ETextError WriteText(const char* sPath, CObject pObj, bool pretty = true);
+
+    class CBinaryParser {
+        struct {
+            uint32_t formatNum;
+        } m_header;
+
+        public:
+            CBinaryParser() = default;
+
+            EBinaryError Parse(const char* sPath);
+
+            CObject Root();
+
+            CPathAccess operator[](const char* sPath);
+
+            size_t FormatError(EBinaryError iCode, char* sBuffer, size_t iBufferLn);
+    };
+
+    EBinaryError WriteBinary(const char* sPath, CObject pObj, int compression = 0);
 }
 
 #endif

@@ -1,66 +1,152 @@
 version 100
 
-cbb {
-    base {
-        depends []          # project-local dependencies
-        depends_ex []       # external dependencies
+base_target {
+    depends []
+    depends_ex []
 
-        class "exe"
+    class "exe"
 
-        includes [ ]
-        source [ ]
-        lib [ ]
+    includes [ ]
+    source [ ]
+    lib [ ]
 
-        link [ ]
-        link_shared [ ]
+    link [ ]
+    link_shared [ ]
 
-        compiler "g++"
+    compiler "g++"
 
-        cc_args ["-std=c++17" "-fno-exceptions"]
-        ld_args [ ]
+    cc_args ["-std=c++17" "-fno-exceptions"]
+    ld_args [ ]
 
-        out "test"
-
-        exec []
-    }
-
-    debug {
-        cc_args ["-g3"]
-    }
-
-    release {
-        cc_args ["-O2"]
-    }
+    out "test"
 }
 
 targets {
     main {
-        concat "cbb.base"
+        concat "base_target"
 
-        source [ "include_test/test.cpp" ]
-        includes [ "." "include_test" ]
-
-        out "scan_test"
-
-        # executed based on it`s index in this list
-        exec [
-            # step 1 - before doing anything
+        depends_ex [
             {
-                command "move"
-                args ["source.a" "dest.a"]
-            }
-
-            # step 2 - after successful compiling
-            {
-                command "run"
-                args ["scripts/run_test.sh"]
-            }
-
-            #step 3 - after successful linking
-            {
-                command "copy"
-                args ["source.cpp" "dest.cpp"]
+                path "hotchlib/hotchlib.cml"
+                target "main"
             }
         ]
+
+        class "static"
+
+        includes [
+            "src" "include" "."
+            "hotchlib/include"
+        ]
+
+        source [
+            "src/*.cpp"
+        ]
+
+        lib [
+            "hotchlib"
+        ]
+
+        link [
+            "libhotch.a"
+        ]
+
+        cc_args [ ]
+
+        out "libcml.a"
+    }
+
+    main_debug {
+        concat "targets.main"
+
+        cc_args ["-g3"]
+    }
+
+    main_pic {
+        concat "base_target"
+
+        depends_ex [
+            {
+                path "hotchlib/hotchlib.cml"
+                target "main_pic"
+            }
+        ]
+
+        class "static"
+
+        includes [
+            "src" "include" "."
+            "hotchlib/include"
+        ]
+
+        source [
+            "src/*.cpp"
+        ]
+
+        lib [
+            "hotchlib"
+        ]
+
+        link [
+            "libhotch.pic.a"
+        ]
+
+        cc_args [ "-O2" "-fPIC" ]
+
+        out "libcml.pic.a"
+    }
+
+    shared {
+        concat "base_target"
+
+        depends_ex [
+            {
+                path "hotchlib/hotchlib.cml"
+                target "shared"
+            }
+        ]
+
+        class "shared"
+
+        includes [
+            "src" "include" "."
+            "hotchlib/include"
+        ]
+
+        source [
+            "src/*.cpp"
+        ]
+
+        cc_args [ "-O2" ]
+
+        out "libcml.so"
+    }
+
+    test {
+        concat "base_target"
+
+        depends [
+            "main_debug"
+        ]
+
+        class "exe"
+
+        source ["test.cpp"]
+
+        includes [
+            "." "include"
+            "hotchlib/include"
+        ]
+
+        lib [
+            "."
+            "hotchlib"
+        ]
+
+        link ["libcml.a" "libhotch.a"]
+
+        cc_args ["-g3"]
+
+        out "cmltest"
     }
 }

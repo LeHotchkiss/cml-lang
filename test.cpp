@@ -5,7 +5,7 @@
 int main(int argc, char** argv) {
     using namespace cml;
 
-    char* sPath = (char*)"./cml_lang.cml";
+    char* sPath = (char*)"./test.cml";
 
     if(argc > 1) {
         sPath = (char*)argv[1];
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 
         if(access.Status() != EPathError::Ok) {
             puts(StringError(access.Status()));
-            return 1;
+            continue;
         }
 
         PrintObject(access.Object());

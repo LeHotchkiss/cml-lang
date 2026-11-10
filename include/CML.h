@@ -17,6 +17,9 @@
 
 #define CDF_MAGIC_NUMBER                (*((uint32_t*)("CDF")))
 
+#define CDF_VERSION_MAJOR               1
+#define CDF_VERSION_MINOR               0
+
 namespace cml {
     enum class ETextError : uint32_t {
         Ok,                     // We`re cool
@@ -51,7 +54,10 @@ namespace cml {
     enum class EBinaryError : uint32_t {
         Ok,
 
-        MagicNumberMismatch     // file providen is not a CDF one
+        MagicNumberMismatch,    // file providen is not a CDF one
+        NoFile,
+        UnexpectedEOF,
+        VersionMismatch
     };
 
     const char* StringError(ETextError);
@@ -188,13 +194,28 @@ namespace cml {
 
             ~CTextParser();
     };
-
+    
     ETextError WriteText(const char* sPath, CObject pObj, bool pretty = true);
 
     class CBinaryParser {
         struct {
             uint32_t formatNum;
+
+            struct {
+                uint16_t major;
+                uint16_t minor;
+            } version;
+
+            uint32_t nametableLen;
         } m_header;
+        
+        hlib::IFile* m_file = NULL;
+        CObject m_root = NIL;
+
+        array_t<string_t> m_nametable;
+
+        EBinaryError ReadNametable();
+        EBinaryError ReadMapping();
 
         public:
             CBinaryParser() = default;

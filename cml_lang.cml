@@ -15,13 +15,41 @@ base_target {
 
     compiler "g++"
 
-    cc_args ["-std=c++17" "-fno-exceptions"]
+    cc_args [ ]
     ld_args [ ]
 
     out "test"
 }
 
 targets {
+    zlib {
+        concat "base_target"
+
+        class "static"
+
+        includes ["zlib"]
+
+        source [
+            "zlib/adler32.c"     "zlib/compress.c"
+            "zlib/crc32.c"       "zlib/deflate.c"
+            "zlib/gzclose.c"     "zlib/gzlib.c"
+            "zlib/gzread.c"      "zlib/gzwrite.c"
+            "zlib/inflate.c"     "zlib/infback.c"
+            "zlib/inftrees.c"    "zlib/inffast.c"
+            "zlib/trees.c"       "zlib/uncompr.c"
+            "zlib/zutil.c"
+        ]
+
+        compiler "gcc"
+
+        cc_args [
+            "-O2"
+            "-D_LARGEFILE64_SOURCE=1"
+        ]
+
+        out "libz.a"
+    }
+
     main {
         concat "base_target"
 
@@ -30,6 +58,10 @@ targets {
                 path "hotchlib/hotchlib.cml"
                 target "main"
             }
+        ]
+
+        depends [
+            "zlib"
         ]
 
         class "static"
@@ -51,7 +83,7 @@ targets {
             "libhotch.a"
         ]
 
-        cc_args [ ]
+        cc_args ["-std=c++17" "-fno-exceptions"]
 
         out "libcml.a"
     }
@@ -70,6 +102,10 @@ targets {
                 path "hotchlib/hotchlib.cml"
                 target "main_pic"
             }
+        ]
+
+        depends [
+            "zlib"
         ]
 
         class "static"
@@ -91,7 +127,7 @@ targets {
             "libhotch.pic.a"
         ]
 
-        cc_args [ "-O2" "-fPIC" ]
+        cc_args [ "-O2" "-fPIC" "-std=c++17" "-fno-exceptions" ]
 
         out "libcml.pic.a"
     }
@@ -104,6 +140,10 @@ targets {
                 path "hotchlib/hotchlib.cml"
                 target "shared"
             }
+        ]
+
+        depends [
+            "zlib"
         ]
 
         class "shared"

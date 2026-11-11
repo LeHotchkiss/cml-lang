@@ -601,6 +601,10 @@ namespace cml {
                 return NIL;
         }
 
+        if(pObj == NULL) {
+            return NIL;
+        }
+
         return CObject(pObj);
     }
 

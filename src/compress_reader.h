@@ -3,23 +3,31 @@
 
 #include "hlib/Filesystem.h"
 
+/*
+    File IO class to shadow zlib compression reading API
+*/
+
 namespace cml {
-    class CZippedFile : public hlib::IFile {
-        virtual bool Open(const char*, int) = 0;
-        virtual void Close() = 0;
+    #ifndef CDF_NO_COMPRESSION
+    class CZippedFile final : public hlib::IFile {
+        void* m_fd = NULL;
+        public:
+            bool Open(const char*, int);
+            void Close();
 
-        virtual int GetChar() const = 0;
-        virtual void PutChar(int) = 0;
+            int GetChar() const;
+            void PutChar(int);
 
-        virtual void SetPos(hlib::EFilePos, int64_t) = 0;
-        virtual size_t GetPos() const = 0;
-        virtual void Rewind() = 0;
+            void SetPos(hlib::EFilePos, int64_t);
+            size_t GetPos() const;
+            void Rewind();
 
-        virtual size_t Write(void*, size_t) = 0;
-        virtual size_t Read(void*, size_t) = 0;
+            size_t Write(void*, size_t);
+            size_t Read(void*, size_t);
 
-        virtual hlib::SFileInfo GetInfo() const = 0;
+            hlib::SFileInfo GetInfo() const;
     };
+    #endif
 }
 
 #endif

@@ -48,18 +48,22 @@ namespace cml {
 
         StackOverflow,          // Stack depth exceeded
         StackUnderflow,         // Attempt to pop an empty stack
-        RefHugeFile             // The referenced file exceeds le limit
+        RefHugeFile,            // The referenced file exceeds le limit
+        AllocFailure            // Failed to allocate a new object
     };
 
     enum class EBinaryError : uint32_t {
         Ok,
 
-        MagicNumberMismatch,    // file providen is not a CDF one
-        NoFile,
-        UnexpectedEOF,
-        VersionMismatch
+        MagicNumberMismatch,    // File providen is not a CDF one
+        NoFile,                 // Source file not found
+        UnexpectedEOF,          // EOF jumpscare
+        VersionMismatch,        // Major CDF version differs from file`s one
+        AllocFailure,           // Failed to allocate a new object
+        BadNameID,              // Invalid object name ID
+        BadType,                // Invalid object type
     };
-
+    
     const char* StringError(ETextError);
     const char* StringError(EBinaryError);
     const char* StringError(EPathError);
@@ -208,6 +212,12 @@ namespace cml {
 
             uint32_t nametableLen;
         } m_header;
+    
+        struct SObjectInfo {
+            uint32_t nameID;
+            uint32_t type;
+            uint64_t length;
+        };
         
         hlib::IFile* m_file = NULL;
         CObject m_root = NIL;
@@ -215,10 +225,13 @@ namespace cml {
         array_t<string_t> m_nametable;
 
         EBinaryError ReadNametable();
-        EBinaryError ReadMapping();
+        CObject ReadObject(EBinaryError&, SObjectInfo&);
+        const char* LookupName(uint32_t);
 
         public:
             CBinaryParser() = default;
+
+            void Reset();
 
             EBinaryError Parse(const char* sPath);
 
@@ -227,6 +240,8 @@ namespace cml {
             CPathAccess operator[](const char* sPath);
 
             size_t FormatError(EBinaryError iCode, char* sBuffer, size_t iBufferLn);
+
+            ~CBinaryParser();
     };
 
     EBinaryError WriteBinary(const char* sPath, CObject pObj, int compression = 0);

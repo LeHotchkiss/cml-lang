@@ -18,7 +18,9 @@ namespace cml {
         Binary,
         Integer,
         Float,
-        String
+        String,
+
+        LAST
     };
 
     const char* ClassString(EObjectClass);

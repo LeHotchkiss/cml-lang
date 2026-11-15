@@ -2,4 +2,6 @@
 *.a
 *.so
 cmltest
+cdftest
+cdftest.cdf
 .cbb/*

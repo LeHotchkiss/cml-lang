@@ -1,5 +1,5 @@
-#ifndef CBPP_DATAFILES_OBJMODEL_H
-#define CBPP_DATAFILES_OBJMODEL_H
+#ifndef CML_OBJMODEL_H
+#define CML_OBJMODEL_H
 
 /*
     Object model interface, used both by CML and CDF
@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 #include <stddef.h>
+
+#include "hlib/Filesystem.h"
 
 #include "src/settings.h"
 
@@ -20,7 +22,7 @@ namespace cml {
         Float,
         String,
 
-        LAST
+        LAST        // obviously, this entry must remain the last one
     };
 
     const char* ClassString(EObjectClass);
@@ -35,6 +37,15 @@ namespace cml {
         BadSeparator,           // Something except '.' is used as a separator
         BadPath
     };
+    
+    struct SObjectInfo {
+        struct {
+            uint64_t type       : 8;
+            uint64_t nameLength : 56;
+        } data;
+
+        uint64_t length;
+    };
 
     class IObject;
     class CObject {
@@ -42,8 +53,6 @@ namespace cml {
             CDF objects don`t behave like RAII (eek!) and only get deleted manually
             or when the parent object gets deleted.
         */
-
-        friend EPathError GetPathAccessError();
 
         IObject* m_pObj = NULL;
 
@@ -70,9 +79,6 @@ namespace cml {
             // Size of the object in bytes, if serialized
             size_t Size() const;
 
-            // Dump object`s data to a buffer
-            void Serialize(char* pBuffer) const;
-
             bool operator==(const CObject& pOther) const;
             bool operator!=(const CObject& pOther) const;
 
@@ -84,7 +90,13 @@ namespace cml {
             CObject operator[](size_t iIndex);
             CObject operator[](const char* sName);
 
+            EBinaryError Serialize(hlib::IFile*, string_t* = NULL) const;
+            EBinaryError Deserialize(hlib::IFile*, const SObjectInfo&);
+
+            // Index the N-th key in the table, if table, else NULL
             const char* IndexName(size_t iIndex) const;
+
+            // Index the N-th value in the table or array, else NIL
             CObject Index(size_t iIndex);
 
             void Push(CObject pObj);
@@ -105,7 +117,10 @@ namespace cml {
             operator bool() const;
     };
 
-    // Null value to signal errors
+    /*
+        Null value to signal errors
+        It is safe to call methods on it, they just do nothing
+    */
     extern const CObject NIL;
 
     class CPathAccess {
@@ -120,9 +135,15 @@ namespace cml {
             EPathError Status() const;
     };
 
-    // Access a subobject using the path string
+    /*
+        Access a subobject using the path string
+    */
     CPathAccess AccessObject(CObject pObj, const char* sPath);
 
+    /*
+        For debugging usage
+        Prints the object recursively to the stdout
+    */
     void PrintObject(CObject pObj, size_t iDepth = 0);
 
     /*
@@ -139,8 +160,6 @@ namespace cml {
         Get an independent copy of the given object
     */
     CObject CopyObject(CObject pObj);
-
-    CObject BinaryToObject(char* pBuffer, size_t iBufferLn);
 }
 
 #endif

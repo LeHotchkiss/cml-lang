@@ -21,6 +21,8 @@ int gzFilePos(hlib::EFilePos pos) {
 }
 
 namespace cml {
+    CZippedFile::CZippedFile(char compr) : m_compression(compr) {}
+
     bool CZippedFile::Open(const char* path, int modes) {
         char c_modes[8];
         memset(c_modes, 0, sizeof(c_modes));
@@ -34,6 +36,11 @@ namespace cml {
         if(hlib::TestBitmask<int>(modes, hlib::EFileMode::Append)) {
             strcat(c_modes, "a");
         }
+        
+        strcat(c_modes, "b");
+
+        char compr[2] = { (char)'0' + (char)m_compression, '\0' };
+        strcat(c_modes, compr);
 
         m_fd = gzopen(path, c_modes);
 

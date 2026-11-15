@@ -1,0 +1,5 @@
+[ ] Add 'purge' keyword for deleting inherited values
+[ ] Redo the object model interface, separate reading data header and payload
+[ ] Make sure that StringError tables are in sync with enums
+[ ] Add conditional blocks and 'if/else/elif' keywords
+    [ ] Add env variables, with the ability to peek into the shell env

@@ -2,17 +2,47 @@
 
 #include <math.h>
 #include <string.h>
-#include <ctype.h>
 
 #include "hlib/New.h"
 
 #include "src/object.h"
 #include "src/settings.h"
 
+using namespace hlib;
+
+#define TryWrite(_data, _len)\
+    if( pStream->Write((_data), (_len)) != (_len) ) { return EBinaryError::WriteError; }
+
+#define TryRead(_data, _len)\
+    if( pStream->Read((_data), (_len)) != (_len) ) { return EBinaryError::UnexpectedEOF; }
+
+namespace cml {
+    EBinaryError ReadObjectHeader(IFile* pStream, SObjectInfo& header, string_t& name) {
+        TryRead(&header, sizeof(SObjectInfo));
+
+        if(header.data.type > (uint64_t)EObjectClass::LAST) {
+            return EBinaryError::BadType;
+        }
+        
+        name.Resize(header.data.nameLength);
+        TryRead(name.Pointer(), name.Length());
+
+        return EBinaryError::Ok;
+    }
+}
+
 // CObject
+
+/*
+    CObject is actually a wrapper around IObject* interface pointer.
+    This allows usage of the operator[], doing some extra work and shadows dereferencing.
+
+    Also it looks nicer.
+*/
 
 namespace cml {
     static const char* g_sNullString = "(null)";
+    static string_t g_sNullName(g_sNullString);
 
     CObject::CObject(int_t iValue) {
         *this = CreateObject(EObjectClass::Integer);
@@ -65,15 +95,23 @@ namespace cml {
     CObject::operator uint8_t*() { return m_pObj->AsBinary(); }
     CObject::operator bool() const { return (*this) != cml::NIL; }
 
-    void CObject::Serialize(char* pBuffer) const { m_pObj->Serialize(pBuffer); }
-
     int_t CObject::AsInt() const { return m_pObj->AsInt(); }
     float_t CObject::AsFloat() const { return m_pObj->AsFloat(); }
     const char* CObject::AsString() const { return m_pObj->AsString(); }
     uint8_t* CObject::AsBinary() { return m_pObj->AsBinary(); }
 
     void CObject::Merge(CObject pSource) { m_pObj->Merge(pSource); }
+
+    EBinaryError CObject::Serialize(hlib::IFile* fp, string_t* name) const {
+        return m_pObj->Serialize(fp, name);
+    }
+
+    EBinaryError CObject::Deserialize(hlib::IFile* fp, const SObjectInfo& info) {
+        return m_pObj->Deserialize(fp, info);
+    }
 }
+
+// CNullObject
 
 namespace cml {
     int_t CNullObject::AsInt() const {
@@ -114,9 +152,26 @@ namespace cml {
 
     size_t CNullObject::Length() const { return 0; }
 
-    size_t CNullObject::Size() const { return 1; }
+    size_t CNullObject::Size() const { return 0; }
 
-    void CNullObject::Serialize(char* pBuffer) const { *pBuffer = 0; }
+    EBinaryError CNullObject::Serialize(IFile* pStream, string_t* name) const {
+        SObjectInfo info;
+            info.data.type          = (uint64_t)EObjectClass::Nil;
+            info.data.nameLength    = name ? name->Length() : 0;
+            info.length             = 0;
+    
+        TryWrite(&info, sizeof(info));
+
+        if(name) {
+            TryWrite(name->Pointer(), info.data.nameLength);
+        }
+
+        return EBinaryError::Ok;
+    }
+
+    EBinaryError CNullObject::Deserialize(IFile* pStream, const SObjectInfo& info) {
+        return EBinaryError::Ok;
+    }
 
     void CNullObject::Merge(CObject pSource) { }
 
@@ -184,8 +239,31 @@ namespace cml {
         return sizeof(m_iData);
     }
 
-    void CIntObject::Serialize(char* pBuffer) const {
-        memcpy( pBuffer, &m_iData, sizeof(m_iData) );
+    EBinaryError CIntObject::Serialize(IFile* pStream, string_t* name) const {
+        SObjectInfo info;
+            info.data.type          = (uint64_t)EObjectClass::Integer;
+            info.data.nameLength    = name ? name->Length() : 0;
+            info.length             = this->Size();
+
+        TryWrite(&info, sizeof(info));
+
+        if(name) {
+            TryWrite(name->Pointer(), info.data.nameLength);
+        }
+
+        TryWrite((void*)&m_iData, info.length);
+
+        return EBinaryError::Ok;
+    }
+
+    EBinaryError CIntObject::Deserialize(IFile* pStream, const SObjectInfo& info) {
+        if(info.data.type != (uint32_t)EObjectClass::Integer) { return EBinaryError::TypeMismatch; }
+        if(info.length > this->Size()) { return EBinaryError::NumberTooBig; }
+
+        m_iData = 0;
+        TryRead(&m_iData, info.length);
+
+        return EBinaryError::Ok;
     }
 
     void CIntObject::Merge(CObject pSource) {
@@ -247,8 +325,33 @@ namespace cml {
         return m_aData.Length();
     }
 
-    void CBinaryObject::Serialize(char* pBuffer) const {
-        memcpy( pBuffer, m_aData.Data(), m_aData.Length() );
+    EBinaryError CBinaryObject::Serialize(IFile* pStream, string_t* name) const {
+        SObjectInfo info;
+            info.data.type          = (uint64_t)EObjectClass::Binary;
+            info.data.nameLength    = name ? name->Length() : 0;
+            info.length             = this->Size();
+    
+        TryWrite(&info, sizeof(info));
+
+        if(name) {
+            TryWrite(name->Pointer(), info.data.nameLength);
+        }
+
+        TryWrite((void*)m_aData.Data(), info.length);
+
+        return EBinaryError::Ok;
+    }
+
+    EBinaryError CBinaryObject::Deserialize(IFile* pStream, const SObjectInfo& info) {
+        if(info.data.type != (uint32_t)EObjectClass::Binary) { return EBinaryError::TypeMismatch; }
+
+        m_aData.Reserve(info.length);
+
+        TryRead(m_aData.Data(), info.length);
+
+        m_aData.Shrink();
+
+        return EBinaryError::Ok;
     }
 
     void CBinaryObject::Merge(CObject pSource) {
@@ -316,8 +419,31 @@ namespace cml {
         return sizeof(m_fData);
     }
 
-    void CFloatObject::Serialize(char* pBuffer) const {
-        memcpy( pBuffer, &m_fData, sizeof(m_fData) );
+    EBinaryError CFloatObject::Serialize(IFile* pStream, string_t* name) const {
+        SObjectInfo info;
+            info.data.type          = (uint64_t)EObjectClass::Float;
+            info.data.nameLength    = name ? name->Length() : 0;
+            info.length             = this->Size();
+    
+        TryWrite(&info, sizeof(info));
+
+        if(name) {
+            TryWrite(name->Pointer(), info.data.nameLength);
+        }
+
+        TryWrite((void*)&m_fData, info.length);
+
+        return EBinaryError::Ok;
+    }
+
+    EBinaryError CFloatObject::Deserialize(IFile* pStream, const SObjectInfo& info) {
+        if(info.data.type != (uint32_t)EObjectClass::Float) { return EBinaryError::TypeMismatch; }
+        if(info.length > this->Size()) { return EBinaryError::NumberTooBig; }
+
+        m_fData = 0.0f;
+        TryRead(&m_fData, info.length);
+
+        return EBinaryError::Ok;
     }
 
     void CFloatObject::Merge(CObject pSource) {
@@ -376,11 +502,33 @@ namespace cml {
     }
 
     size_t CStringObject::Size() const {
-        return m_sData.Length() + 1;
+        return m_sData.Length();
     }
 
-    void CStringObject::Serialize(char* pBuffer) const {
-        memcpy( pBuffer, m_sData.String(), m_sData.Length() + 1 );
+    EBinaryError CStringObject::Serialize(IFile* pStream, string_t* name) const {
+        SObjectInfo info;
+            info.data.type          = (uint64_t)EObjectClass::String;
+            info.data.nameLength    = name ? name->Length() : 0;
+            info.length             = this->Size();
+    
+        TryWrite(&info, sizeof(info));
+
+        if(name) {
+            TryWrite(name->Pointer(), info.data.nameLength);
+        }
+
+        TryWrite((void*)m_sData.String(), info.length);
+        
+        return EBinaryError::Ok;
+    }
+
+    EBinaryError CStringObject::Deserialize(IFile* pStream, const SObjectInfo& info) {
+        if(info.data.type != (uint32_t)EObjectClass::String) { return EBinaryError::TypeMismatch; }
+
+        m_sData.Resize(info.length);
+        TryRead(m_sData.Pointer(), info.length);
+
+        return EBinaryError::Ok;
     }
 
     void CStringObject::Merge(CObject pSource) {
@@ -455,13 +603,63 @@ namespace cml {
         }
     }
 
-    void CArrayObject::Serialize(char* pBuffer) const {
-        for(size_t i = 0; i < m_pData.Length(); i++) {
-            IObject* pCurrent = m_pData[i];
+    EBinaryError CArrayObject::Serialize(IFile* pStream, string_t* name) const {
+        SObjectInfo info;
+            info.data.type          = (uint64_t)EObjectClass::String;
+            info.data.nameLength    = name ? name->Length() : 0;
+            info.length             = this->Size();
+    
+        TryWrite(&info, sizeof(info));
 
-            pCurrent->Serialize(pBuffer);
-            pBuffer += pCurrent->Size();
+        if(name) {
+            TryWrite(name->Pointer(), info.data.nameLength);
         }
+
+        for(size_t i = 0; i < m_pData.Length(); i++) {
+            EBinaryError code = m_pData[i]->Serialize(pStream, NULL);
+            if(code != EBinaryError::Ok) {
+                return code;
+            }
+        }
+        
+        return EBinaryError::Ok;
+    }
+
+    EBinaryError CArrayObject::Deserialize(IFile* pStream, const SObjectInfo& info) {
+        if(info.data.type != (uint32_t)EObjectClass::Array) { return EBinaryError::TypeMismatch; }
+
+        for(size_t i = 0; i < m_pData.Length(); i++) {
+            DeleteObject(m_pData[i]);
+        }
+        
+        m_pData.Clear();
+        m_pData.Reserve(info.length);
+
+        string_t childName;
+
+        for(size_t i = 0; i < info.length; i++) {
+            SObjectInfo childInfo;
+            EBinaryError code = ReadObjectHeader(pStream, childInfo, childName);
+
+            if(code != EBinaryError::Ok) { return code; }
+
+            CObject child = CreateObject((EObjectClass)childInfo.data.type);
+            if(child == NIL) {
+                return EBinaryError::AllocFailure;
+            }
+
+            code = child.GetPointer()->Deserialize(pStream, childInfo);
+            if(code != EBinaryError::Ok) {
+                DeleteObject(child);
+                return code;
+            }
+
+            m_pData.PushBack(child.GetPointer());
+        }
+        
+        m_pData.Shrink();
+
+        return EBinaryError::Ok;
     }
 
     void CArrayObject::Merge(CObject pSource) {
@@ -513,7 +711,7 @@ namespace cml {
         if(iIndex >= m_dTable.Length()) { return g_sNullString; }
         return m_dTable.IndexKey(iIndex);
     }
-
+    
     void CDictObject::PushValue(IObject* pObj) { }
 
     void CDictObject::PushValue(const char* sName, IObject* pObj) {
@@ -544,13 +742,66 @@ namespace cml {
         }
     }
 
-    void CDictObject::Serialize(char* pBuffer) const {
-        for(size_t i = 0; i < m_dTable.Length(); i++) {
-            IObject* pCurrent = m_dTable.Index(i);
+    EBinaryError CDictObject::Serialize(IFile* pStream, string_t* name) const {
+        SObjectInfo info;
+            info.data.type          = (uint64_t)EObjectClass::Object;
+            info.data.nameLength    = name ? name->Length() : 0;
+            info.length             = m_dTable.Length(); 
 
-            pCurrent->Serialize(pBuffer);
-            pBuffer += pCurrent->Size();
+        TryWrite(&info, sizeof(info));
+
+        if(name) {
+            TryWrite(name->Pointer(), info.data.nameLength);
         }
+
+        for(size_t i = 0; i < info.length; i++) {
+            IObject* cur = m_dTable.Index(i);
+            EBinaryError code = cur->Serialize(pStream, (string_t*)(&m_dTable.IndexKey(i)));
+
+            if(code != EBinaryError::Ok) {
+                return code;
+            }
+        }
+
+        return EBinaryError::Ok;
+    }
+
+    EBinaryError CDictObject::Deserialize(IFile* pStream, const SObjectInfo& info) {
+        if(info.data.type != (uint32_t)EObjectClass::Object) { return EBinaryError::TypeMismatch; }
+
+        for(size_t i = 0; i < m_dTable.Length(); i++) {
+            DeleteObject(m_dTable.Index(i));
+        }
+
+        m_dTable.Clear();
+
+        string_t childName;
+
+        for(size_t i = 0; i < info.length; i++) {
+            SObjectInfo childInfo;
+
+            EBinaryError code = ReadObjectHeader(pStream, childInfo, childName);
+            if(code != EBinaryError::Ok) {
+                return code;
+            }
+            
+            CObject child = CreateObject((EObjectClass)info.data.type);
+            if(child == NIL) {
+                DeleteObject(child);
+                return EBinaryError::AllocFailure;
+            }
+
+            code = child.GetPointer()->Deserialize(pStream, childInfo);
+            if(code != EBinaryError::Ok) {
+                return code;
+            }
+
+            m_dTable.Insert(childName, child.GetPointer());
+        }
+
+        m_dTable.Shrink();
+
+        return EBinaryError::Ok;
     }
 
     void CDictObject::Merge(CObject pSource) {
@@ -574,27 +825,27 @@ namespace cml {
 
         switch(iClass) {
             case EObjectClass::Array:
-                pObj = hlib::New<CArrayObject, cml_alloc_t>();
+                pObj = hlib::New<CArrayObject, cml_alloc_t, &cml::g_defaultAlloc>();
                 break;
 
             case EObjectClass::Binary:
-                pObj = hlib::New<CBinaryObject, cml_alloc_t>();
+                pObj = hlib::New<CBinaryObject, cml_alloc_t, &cml::g_defaultAlloc>();
                 break;
 
             case EObjectClass::Float:
-                pObj = hlib::New<CFloatObject, cml_alloc_t>();
+                pObj = hlib::New<CFloatObject, cml_alloc_t, &cml::g_defaultAlloc>();
                 break;
 
             case EObjectClass::Integer:
-                pObj = hlib::New<CIntObject, cml_alloc_t>();
+                pObj = hlib::New<CIntObject, cml_alloc_t, &cml::g_defaultAlloc>();
                 break;
 
             case EObjectClass::Object:
-                pObj = hlib::New<CDictObject, cml_alloc_t>();
+                pObj = hlib::New<CDictObject, cml_alloc_t, &cml::g_defaultAlloc>();
                 break;
 
             case EObjectClass::String:
-                pObj = hlib::New<CStringObject, cml_alloc_t>();
+                pObj = hlib::New<CStringObject, cml_alloc_t, &cml::g_defaultAlloc>();
                 break;
 
             case EObjectClass::Nil:
@@ -613,7 +864,7 @@ namespace cml {
             return;
         }
 
-        hlib::Delete(pObj.GetPointer());
+        hlib::Delete<IObject, cml_alloc_t, &cml::g_defaultAlloc>(pObj.GetPointer());
     }
 
     void PrintTabs(size_t iNum) {

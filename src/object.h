@@ -1,5 +1,5 @@
-#ifndef CML_DATAFILE_OBJECTS_H
-#define CML_DATAFILE_OBJECTS_H
+#ifndef CML_OBJECTS_H
+#define CML_OBJECTS_H
 
 #include "CML.h"
 
@@ -21,7 +21,8 @@ namespace cml {
             virtual const char* AsString() const = 0;
             virtual uint8_t* AsBinary() = 0;
 
-            virtual void Serialize(char*) const = 0;
+            virtual EBinaryError Serialize(hlib::IFile*, string_t* = NULL) const = 0;
+            virtual EBinaryError Deserialize(hlib::IFile*, const SObjectInfo&) = 0;
 
             virtual void SetValue(int_t) = 0;
             virtual void SetValue(float_t) = 0;
@@ -55,7 +56,8 @@ namespace cml {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
-            void Serialize(char*) const;
+            EBinaryError Serialize(hlib::IFile*, string_t* = NULL) const;
+            EBinaryError Deserialize(hlib::IFile*, const SObjectInfo&);
             
             IObject* At(const char*);
             IObject* At(size_t);
@@ -90,7 +92,8 @@ namespace cml {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
-            void Serialize(char*) const;
+            EBinaryError Serialize(hlib::IFile*, string_t* = NULL) const;
+            EBinaryError Deserialize(hlib::IFile*, const SObjectInfo&);
 
             IObject* At(const char*);
             IObject* At(size_t);
@@ -125,7 +128,8 @@ namespace cml {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
-            void Serialize(char*) const;
+            EBinaryError Serialize(hlib::IFile*, string_t* = NULL) const;
+            EBinaryError Deserialize(hlib::IFile*, const SObjectInfo&);
 
             IObject* At(const char*);
             IObject* At(size_t);
@@ -158,7 +162,8 @@ namespace cml {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
-            void Serialize(char*) const;
+            EBinaryError Serialize(hlib::IFile*, string_t* = NULL) const;
+            EBinaryError Deserialize(hlib::IFile*, const SObjectInfo&);
 
             IObject* At(const char*);
             IObject* At(size_t);
@@ -193,7 +198,8 @@ namespace cml {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
-            void Serialize(char*) const;
+            EBinaryError Serialize(hlib::IFile*, string_t* = NULL) const;
+            EBinaryError Deserialize(hlib::IFile*, const SObjectInfo&);
 
             IObject* At(const char*);
             IObject* At(size_t);
@@ -228,7 +234,8 @@ namespace cml {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
-            void Serialize(char*) const;
+            EBinaryError Serialize(hlib::IFile*, string_t* = NULL) const;
+            EBinaryError Deserialize(hlib::IFile*, const SObjectInfo&);
 
             IObject* At(const char*);
             IObject* At(size_t);
@@ -246,7 +253,7 @@ namespace cml {
 
             virtual ~CDictObject() override;
     };
-    
+
     class CNullObject final : public IObject {
         constexpr static const char* s_sName = "<NIL>";
 
@@ -261,7 +268,8 @@ namespace cml {
             void SetValue(const char*);
             void SetValue(const uint8_t*, size_t);
 
-            void Serialize(char*) const;
+            EBinaryError Serialize(hlib::IFile*, string_t* = NULL) const;
+            EBinaryError Deserialize(hlib::IFile*, const SObjectInfo&);
 
             IObject* At(const char*);
             IObject* At(size_t);

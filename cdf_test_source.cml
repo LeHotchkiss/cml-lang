@@ -1,0 +1,10 @@
+version 100
+
+numb 5
+
+array [
+    1
+    2
+    3
+    "string"
+]

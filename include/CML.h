@@ -20,50 +20,7 @@
 #define CDF_VERSION_MAJOR               1
 #define CDF_VERSION_MINOR               0
 
-namespace cml {
-    enum class ETextError : uint32_t {
-        Ok,                     // We`re cool
-
-        StrayIdentifier,        // Random identifier that does not connect to anything
-        StrayNumber,            // Random out-of-context number
-        StrayKeyword,           // Random out-of-context keyword
-        StrayString,            // Random out-of-context string
-        StrayBlock,             // Nameless block
-        StrayArray,             // Nameless array
-        ScobeMiss,              // Badly formatted block (curvy braces mismatch)
-
-        BadFileRef,             // Can`t open said file path
-        BadReference,           // Anything except string is marked as reference
-        BadInheritance,         // Inheriting is used on non-table objects
-        ParentNotFound,         // Parent object not found
-        OverrideTypeMix,        // The child value we are about to overwrite is of different type than parent`s one
-
-        BadNumber,              // Badly formatted number
-        NoFile,                 // Source file not found
-        UnexpectedEOF,          // EOF jumpscare in the middle of something
-        VersionMismatch,        // Source file`s CML version is incompatible
-        BadVersion,             // Version is negative or is a float
-        BadEscapeChar,          // Wrong escape character is detected inside a string
-        BadNumberSuffix,        // Wrong number type suffix
-
-        StackOverflow,          // Stack depth exceeded
-        StackUnderflow,         // Attempt to pop an empty stack
-        RefHugeFile,            // The referenced file exceeds le limit
-        AllocFailure            // Failed to allocate a new object
-    };
-
-    enum class EBinaryError : uint32_t {
-        Ok,
-
-        MagicNumberMismatch,    // File providen is not a CDF one
-        NoFile,                 // Source file not found
-        UnexpectedEOF,          // EOF jumpscare
-        VersionMismatch,        // Major CDF version differs from file`s one
-        AllocFailure,           // Failed to allocate a new object
-        BadNameID,              // Invalid object name ID
-        BadType,                // Invalid object type
-    };
-    
+namespace cml {    
     const char* StringError(ETextError);
     const char* StringError(EBinaryError);
     const char* StringError(EPathError);
@@ -201,32 +158,20 @@ namespace cml {
     
     ETextError WriteText(const char* sPath, CObject pObj, bool pretty = true);
 
-    class CBinaryParser {
+    struct SCDFHead {
+        uint32_t formatNum;
+
         struct {
-            uint32_t formatNum;
+            uint16_t major;
+            uint16_t minor;
+        } version;
+    };
 
-            struct {
-                uint16_t major;
-                uint16_t minor;
-            } version;
-
-            uint32_t nametableLen;
-        } m_header;
-    
-        struct SObjectInfo {
-            uint32_t nameID;
-            uint32_t type;
-            uint64_t length;
-        };
+    class CBinaryParser {
+        SCDFHead m_header;
         
         hlib::IFile* m_file = NULL;
         CObject m_root = NIL;
-
-        array_t<string_t> m_nametable;
-
-        EBinaryError ReadNametable();
-        CObject ReadObject(EBinaryError&, SObjectInfo&);
-        const char* LookupName(uint32_t);
 
         public:
             CBinaryParser() = default;
@@ -244,6 +189,9 @@ namespace cml {
             ~CBinaryParser();
     };
 
+    /*
+        Write a CDF file with pObj being the root
+    */
     EBinaryError WriteBinary(const char* sPath, CObject pObj, int compression = 0);
 }
 

@@ -11,7 +11,10 @@ namespace cml {
     #ifndef CDF_NO_COMPRESSION
     class CZippedFile final : public hlib::IFile {
         void* m_fd = NULL;
+        char m_compression = 9;
         public:
+            CZippedFile(char);
+
             bool Open(const char*, int);
             void Close();
 
